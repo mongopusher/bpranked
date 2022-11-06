@@ -18,9 +18,9 @@ export class AppService {
 
             switch (command) {
                 case Commands.START:
-                    return bot.sendMessage(msg.chat.id, `Hallo ${msg.chat.first_name}`);
+                    return bot.sendMessage(msg.chat.id, `Hallo ${msg.chat.first_name || msg.chat.username}`);
                 case Commands.STOP:
-                    return bot.sendMessage(msg.chat.id, `Tschüss ${msg.chat.first_name}`);
+                    return bot.sendMessage(msg.chat.id, `Tschüss ${msg.chat.first_name || msg.chat.username}`);
                 case Commands.METADATA:
                     return bot.sendMessage(msg.chat.id, JSON.stringify(msg));
                 case Commands.HELP:
