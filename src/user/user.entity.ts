@@ -22,6 +22,8 @@ export class UserEntity {
     @BeforeInsert()
     @BeforeUpdate()
     async hashPassword() {
-        this.password = await hash(this.password, 10);
+        if (this.password !== undefined) {
+            this.password = await hash(this.password, 10);
+        }
     }
 }
