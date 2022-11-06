@@ -1,23 +1,27 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { hash } from 'bcrypt';
+import {BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {hash} from 'bcrypt';
+import {BotState} from "@webserver/bot/botState.constant";
 
-@Entity({ name: 'users' })
+@Entity({name: 'users'})
 export class UserEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-  @Column()
-  telegramId: number;
+    @Column()
+    telegramId: number;
 
-  @Column()
-  username: string;
+    @Column()
+    username: string | undefined;
 
-  @Column({ select: false })
-  password: string;
+    @Column({select: false})
+    password: string | undefined;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  async hashPassword() {
-    this.password = await hash(this.password, 10);
-  }
+    @Column()
+    botState: BotState;
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    async hashPassword() {
+        this.password = await hash(this.password, 10);
+    }
 }

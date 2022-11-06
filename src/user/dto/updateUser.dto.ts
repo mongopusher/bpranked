@@ -1,13 +1,28 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {IsOptional} from 'class-validator';
+import {BotState} from "@webserver/bot/botState.constant";
 
 export class UpdateUserDto {
-  @IsOptional()
-  readonly username?: string;
+    public constructor(
+        username?: string | undefined,
+        telegramId?: number | undefined,
+        password?: string | undefined,
+        botState?: BotState | undefined
+    ) {
+        this.username = username;
+        this.telegramId = telegramId;
+        this.password = password;
+        this.botState = botState;
+    }
 
-  @IsEmail()
-  @IsOptional()
-  readonly email?: string;
+    @IsOptional()
+    readonly username?: string | undefined;
 
-  @IsNotEmpty()
-  readonly password: string;
+    @IsOptional()
+    readonly password?: string | undefined;
+
+    @IsOptional()
+    readonly telegramId?: number | undefined;
+
+    @IsOptional()
+    readonly botState?: BotState | undefined;
 }

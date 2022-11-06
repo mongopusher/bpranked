@@ -5,7 +5,6 @@ import {UserModule} from '@webserver/user/user.module';
 import {TypeOrmModule} from '@nestjs/typeorm';
 import ormconfig from '@webserver/ormconfig';
 import {AuthMiddleware} from '@webserver/user/middlewares/auth.middleware';
-import {BotService} from "@webserver/bot/bot.service";
 import {BotModule} from "@webserver/bot/bot.module";
 
 @Module({

@@ -6,10 +6,10 @@ import {CreateUserDto} from '@webserver/user/dto/createUser.dto';
 import {sign} from 'jsonwebtoken';
 import {IUserResponse} from '@webserver/user/types/user-response.interface';
 import {LoginUserDto} from '@webserver/user/dto/loginUser.dto';
-import {UserUtils} from '@webserver/user/user.utils';
 import {compare} from 'bcrypt';
 import {UpdateUserDto} from '@webserver/user/dto/updateUser.dto';
 import * as fs from 'fs';
+import {BotState} from "@webserver/bot/botState.constant";
 
 @Injectable()
 export class UserService {
@@ -25,19 +25,20 @@ export class UserService {
 
     public async create(createUserDto: CreateUserDto): Promise<UserEntity> {
         //TODO: keine sonderzeichen im namen, nur maximal 32 zeichen lang bitte
-        const userByUsername = await this.userRepository.findOneBy({
-            username: createUserDto.username,
+        const userByTelegramId = await this.userRepository.findOneBy({
+            telegramId: createUserDto.telegramId,
         });
 
-        if (userByUsername !== null) {
+        if (userByTelegramId !== null) {
             throw new HttpException(
-                'Username is taken',
+                'Telegram id is already taken',
                 HttpStatus.UNPROCESSABLE_ENTITY,
             );
         }
 
         const newUser = new UserEntity();
         Object.assign(newUser, createUserDto);
+        newUser.botState = BotState.ON;
         return await this.userRepository.save(newUser);
     }
 
@@ -72,17 +73,33 @@ export class UserService {
         return user;
     }
 
+    public async updateBotstate(telegramId: number, botState: BotState): Promise<UserEntity> {
+        const updateResult = await this.userRepository.update(
+            {telegramId},
+            {botState},
+        );
+
+        if (updateResult.affected !== 1) {
+            console.error(
+                'Always should be 1 row on updateUser! Actual affected: ',
+                updateResult.affected,
+            );
+        }
+
+        return this.getByTelegramId(telegramId);
+    }
+
     public async updateUser(
-        currentUserId: number,
+        telegramId: number,
         updateUserDto: UpdateUserDto,
     ): Promise<UserEntity> {
-        const user = await this.getById(currentUserId, true);
+        const user = await this.getByTelegramId(telegramId, true);
 
         const username = updateUserDto.username ?? user.username;
 
         if (updateUserDto.username !== undefined) {
             const possibleDuplicateByUsername = await this.userRepository.findOneBy({
-                id: Not(currentUserId),
+                id: Not(telegramId),
                 username,
             });
 
@@ -94,18 +111,10 @@ export class UserService {
             }
         }
 
-        const isPasswordCorrect = await compare(
-            updateUserDto.password,
-            user.password,
-        );
-
-        if (isPasswordCorrect === false) {
-            throw new HttpException(`Password is wrong`, HttpStatus.UNAUTHORIZED);
-        }
 
         Object.assign(user, {username});
         const updateResult = await this.userRepository.update(
-            {id: currentUserId},
+            {telegramId},
             {username},
         );
         if (updateResult.affected !== 1) {
@@ -115,7 +124,7 @@ export class UserService {
             );
         }
 
-        return await this.getById(currentUserId);
+        return await this.getById(telegramId);
     }
 
     public async getById(
@@ -133,12 +142,28 @@ export class UserService {
         return await this.userRepository.findOne(searchOptions);
     }
 
+    public async getByTelegramId(
+        telegramId: number,
+        withPassword = false,
+    ): Promise<UserEntity | null> {
+        if (telegramId === undefined || telegramId === null) {
+            return null;
+        }
+
+        const searchOptions: FindOneOptions = withPassword
+            ? {where: {telegramId}, select: ['username', 'password']}
+            : {where: {telegramId}};
+
+        return await this.userRepository.findOne(searchOptions);
+    }
+
     public async buildUserResponse(user: UserEntity): Promise<IUserResponse> {
         const token = await this.generateJwt(user);
         return {
             user: {
                 username: user.username,
                 id: user.id,
+                botState: user.botState,
                 token,
                 telegramId: user.telegramId,
                 expiresIn: 86400,

@@ -1,9 +1,18 @@
-import { IsNotEmpty } from 'class-validator';
+import {IsNotEmpty, IsOptional} from 'class-validator';
 
 export class CreateUserDto {
-  @IsNotEmpty()
-  readonly username: string;
+    public constructor(username: string, telegramId: number, password?: string | undefined) {
+        this.username = username;
+        this.telegramId = telegramId;
+        this.password = password;
+    }
 
-  @IsNotEmpty()
-  readonly password: string;
+    @IsNotEmpty()
+    readonly username: string;
+
+    @IsNotEmpty()
+    readonly telegramId: number;
+
+    @IsOptional()
+    readonly password: string | undefined;
 }

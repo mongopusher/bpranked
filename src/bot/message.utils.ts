@@ -1,3 +1,14 @@
+export const getInitialGreeting = (name: string): string => {
+    const greetings = [
+        `Sei gegrüßt ${name}!\nErweise dich als würdig.`,
+        `Willkommen ${name}!\nVerneige dich vor deinem neuen Gott!`,
+        `Hallo ${name}!\nTritt ein und werde Teil einer neuen Weltordnung!`,
+    ];
+
+    const random = Math.floor(Math.random() * greetings.length);
+    return greetings[random];
+};
+
 export const getGreeting = (name: string): string => {
     const greetings = [
         `Hi ${name}! Was geht ab?`,
@@ -8,7 +19,7 @@ export const getGreeting = (name: string): string => {
 
     const random = Math.floor(Math.random() * greetings.length);
     return greetings[random];
-}
+};
 
 export const getFarewell = (name: string): string => {
     const farewells = [
@@ -19,4 +30,4 @@ export const getFarewell = (name: string): string => {
 
     const random = Math.floor(Math.random() * farewells.length);
     return farewells[random];
-}
+};
