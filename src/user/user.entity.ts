@@ -13,7 +13,10 @@ export class UserEntity {
     @Column()
     username: string | undefined;
 
-    @Column({select: false})
+    @Column({
+        select: false,
+        nullable: true,
+    })
     password: string | undefined;
 
     @Column()
