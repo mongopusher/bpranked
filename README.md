@@ -22,8 +22,8 @@
   - `sudo -u postgres psql`
 - Configuring postgresql:
   - `create database bpranked;`
-  - `create user player with encrypted password 'PASSWORD';`
-  - `grant all privileges on database bpranked to player;`
+  - `create user bpranked with encrypted password 'PASSWORD';`
+  - `grant all privileges on database bpranked to bpranked;`
 - (Re-)initiate the database:
   - `npx nps db.clean`
 
