@@ -57,6 +57,10 @@ export class BotService {
         console.log(user);
 
         if (!user) {
+            if (msg.from.username === undefined) {
+                return this.bot.sendMessage(msg.chat.id, 'Du musst vorher in den Telegram-Einstellungen einen Benutzernamen anlegen.')
+            }
+
             await this.userService.create(new CreateUserDto(msg.from.username, msg.from.id));
             return this.bot.sendMessage(msg.chat.id, getInitialGreeting(name));
         }
