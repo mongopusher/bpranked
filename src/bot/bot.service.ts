@@ -66,20 +66,19 @@ export class BotService {
 
             // TODO: check the whole file for usage of user id vs telegram id
             const text = match[0];
+            const args = this.cachedUserInput.get(msg.from.id);
             switch (user.botState) {
                 case BotState.START_NEW_CUP:
-                    this.cachedUserInput.set(msg.from.id, [text]);
+                    args.push(text);
+                    this.cachedUserInput.set(msg.from.id, args);
                     await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
-                    await this.bot.sendMessage(msg.from.id, 'Pls send enddate');
+                    return await this.bot.sendMessage(msg.from.id, 'Pls send enddate');
                 case BotState.NEW_CUP_NAME_SET:
-                    const args = this.cachedUserInput.get(user.id);
-                    this.cachedUserInput.set(msg.from.id, [...args, text]);
-                    const cup = await this.cupService.create(user, new CreateCupDto(args.pop(), new Date(text)));
+                    const cup = await this.cupService.create(user, new CreateCupDto(args[0], new Date(text)));
                     await this.userService.updateBotstate(msg.from.id, BotState.ON);
-                    await this.bot.sendMessage(msg.from.id, `Cup erstellt:  ${JSON.stringify(cup)}`);
-
+                    return await this.bot.sendMessage(msg.from.id, `Cup erstellt:  ${JSON.stringify(cup)}`);
                 default:
-                    return;
+                    throw new Error('THIS SHOULD NEVER HAPPEN');
             }
         });
     }
@@ -91,6 +90,8 @@ export class BotService {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         console.log(user);
+
+        this.cachedUserInput.set(msg.from.id, []);
 
         if (!user) {
             if (msg.from.username === undefined) {
