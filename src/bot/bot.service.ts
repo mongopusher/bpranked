@@ -6,14 +6,17 @@ import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/messa
 import {UserService} from "@webserver/user/user.service";
 import {CreateUserDto} from "@webserver/user/dto/createUser.dto";
 import {UserEntity} from "@webserver/user/user.entity";
+import {CupService} from "@webserver/cup/cup.service";
+import {MESSAGE_REGEX} from "@webserver/bot/messageRegex.constant";
 
 @Injectable()
 export class BotService {
-    private state: Map<number, BotState>;
     private bot: TelegramBot;
+    private cachedUserInput: Map<number, Array<string>>;
 
-    public constructor(@Inject(UserService) private readonly userService: UserService) {
-        this.state = new Map<number, BotState>();
+    public constructor(@Inject(UserService) private readonly userService: UserService,
+                       @Inject(UserService) private readonly cupService: CupService) {
+        this.cachedUserInput = new Map<number, Array<string>>();
     }
 
     public async initialize(): Promise<void> {
@@ -21,8 +24,7 @@ export class BotService {
 
         this.bot = new TelegramBot(token, {polling: true});
 
-        // es gibt vieles mehr als nur 'on' oder 'onText'
-        this.bot.onText(/\/(.+)/, async (msg, match) => {
+        this.bot.onText(MESSAGE_REGEX.COMMAND, async (msg, match) => {
             console.log(msg);
             const command = match[1];
 
@@ -41,10 +43,18 @@ export class BotService {
                     return this.stopBot(user, msg);
                 case Commands.METADATA:
                     return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
+                case Commands.NEW_CUP:
+                    return this.startNewCup(msg);
                 case Commands.HELP:
                 default:
                     return this.sendHelp(msg.chat.id);
             }
+        });
+
+        this.bot.onText(MESSAGE_REGEX.TEXT, async (msg, match) => {
+            const text = match[0];
+
+            console.log(text);
         });
     }
 
@@ -80,6 +90,7 @@ export class BotService {
             return;
         }
 
+        this.cachedUserInput.delete(msg.from.id);
         await this.userService.updateBotstate(msg.from.id, BotState.OFF);
         return this.bot.sendMessage(msg.chat.id, getFarewell(name));
     }
@@ -90,5 +101,11 @@ export class BotService {
             '/start - startet den Bot\n' +
             '/stop - stopppt den bot'
         );
+    }
+
+    private async startNewCup(msg: Message): Promise<any> {
+        await this.userService.updateBotstate(msg.from.id, BotState.START_NEW_CUP);
+
+        return this.bot.sendMessage(msg.from.id,'Erstelle neuen Cup. Bitte gib zuerst einen Namen für den Cup an.');
     }
 }

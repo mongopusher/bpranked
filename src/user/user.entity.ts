@@ -1,6 +1,7 @@
-import {BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {hash} from 'bcrypt';
 import {BotState} from "@webserver/bot/botState.constant";
+import {CupEntity} from "@webserver/cup/cup.entity";
 
 @Entity({name: 'users'})
 export class UserEntity {
@@ -29,4 +30,7 @@ export class UserEntity {
             this.password = await hash(this.password, 10);
         }
     }
+
+    @OneToMany(() => CupEntity, (cup) => cup.manager)
+    cups: Array<CupEntity>;
 }

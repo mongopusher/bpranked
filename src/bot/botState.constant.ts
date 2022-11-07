@@ -2,7 +2,6 @@ export enum BotState {
     OFF = 0,
     ON = 1,
 
-    CREATE_USER = 10,
+    START_NEW_CUP = 20, // request name
 
-    CREATE_GAME = 20,
 }
