@@ -1,13 +1,14 @@
 import {Inject, Injectable} from "@nestjs/common";
 import TelegramBot, {Message} from "node-telegram-bot-api";
 import {Commands} from "@webserver/bot/commands.constant";
-import {BotState} from "@webserver/bot/botState.constant";
+import {acceptTextBotStates, BotState} from "@webserver/bot/botState.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
 import {UserService} from "@webserver/user/user.service";
 import {CreateUserDto} from "@webserver/user/dto/createUser.dto";
 import {UserEntity} from "@webserver/user/user.entity";
 import {CupService} from "@webserver/cup/cup.service";
 import {MESSAGE_REGEX} from "@webserver/bot/messageRegex.constant";
+import { CreateCupDto } from "@webserver/cup/dto/createCup.dto";
 
 @Injectable()
 export class BotService {
@@ -52,9 +53,31 @@ export class BotService {
         });
 
         this.bot.onText(MESSAGE_REGEX.TEXT, async (msg, match) => {
-            const text = match[0];
+            const user = await this.userService.getByTelegramId(msg.from.id);
 
-            console.log(text);
+            if (!user) {
+                return;
+            }
+
+            if (!acceptTextBotStates.includes(user.botState)) {
+                return;
+            }
+
+            const text = match[0];
+            switch (user.botState) {
+                case BotState.START_NEW_CUP:
+                    this.cachedUserInput.set(user.id, [text]);
+                    await this.userService.updateBotstate(BotState.NEW_CUP_NAME_SET);
+                    await this.bot.sendMessage(msg.from.id, 'Pls send enddate');
+                case BotState.NEW_CUP_NAME_SET:
+                    const args = this.cachedUserInput.get(user.id);
+                    this.cachedUserInput.set(user.id, [...args, text]);
+                    const cup = await this.cupService.create(new CreateCupDto(user.id, args.pop(), new Date(text)));
+                    await this.bot.sendMessage(msg.from.id, 'Cup erstellt');
+
+                default:
+                    return;
+            }
         });
     }
 
@@ -106,6 +129,6 @@ export class BotService {
     private async startNewCup(msg: Message): Promise<any> {
         await this.userService.updateBotstate(msg.from.id, BotState.START_NEW_CUP);
 
-        return this.bot.sendMessage(msg.from.id,'Erstelle neuen Cup. Bitte gib zuerst einen Namen für den Cup an.');
+        return this.bot.sendMessage(msg.from.id, 'Erstelle neuen Cup. Bitte gib zuerst einen Namen für den Cup an.');
     }
 }

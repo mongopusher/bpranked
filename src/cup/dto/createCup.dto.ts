@@ -1,7 +1,7 @@
 import {IsNotEmpty, IsOptional} from 'class-validator';
 
 export class CreateCupDto {
-    public constructor(managerId: number, name: string, endTimestamp: Date, startTimestamp: Date | undefined) {
+    public constructor(managerId: number, name: string, endTimestamp: Date, startTimestamp?: Date | undefined) {
         this.managerId = managerId;
         this.name = name;
         this.endTimestamp = endTimestamp;
