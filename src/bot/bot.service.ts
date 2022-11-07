@@ -8,7 +8,7 @@ import {CreateUserDto} from "@webserver/user/dto/createUser.dto";
 import {UserEntity} from "@webserver/user/user.entity";
 import {CupService} from "@webserver/cup/cup.service";
 import {MESSAGE_REGEX} from "@webserver/bot/messageRegex.constant";
-import { CreateCupDto } from "@webserver/cup/dto/createCup.dto";
+import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
 
 @Injectable()
 export class BotService {
@@ -63,17 +63,20 @@ export class BotService {
                 return;
             }
 
+
+            // TODO: check the whole file for usage of user id vs telegram id
             const text = match[0];
             switch (user.botState) {
                 case BotState.START_NEW_CUP:
-                    this.cachedUserInput.set(user.id, [text]);
-                    await this.userService.updateBotstate(BotState.NEW_CUP_NAME_SET);
+                    this.cachedUserInput.set(msg.from.id, [text]);
+                    await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
                     await this.bot.sendMessage(msg.from.id, 'Pls send enddate');
                 case BotState.NEW_CUP_NAME_SET:
                     const args = this.cachedUserInput.get(user.id);
-                    this.cachedUserInput.set(user.id, [...args, text]);
-                    const cup = await this.cupService.create(new CreateCupDto(user.id, args.pop(), new Date(text)));
-                    await this.bot.sendMessage(msg.from.id, 'Cup erstellt');
+                    this.cachedUserInput.set(msg.from.id, [...args, text]);
+                    const cup = await this.cupService.create(user, new CreateCupDto(args.pop(), new Date(text)));
+                    await this.userService.updateBotstate(msg.from.id, BotState.ON);
+                    await this.bot.sendMessage(msg.from.id, `Cup erstellt:  ${JSON.stringify(cup)}`);
 
                 default:
                     return;

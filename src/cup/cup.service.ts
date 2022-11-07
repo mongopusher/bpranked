@@ -3,6 +3,7 @@ import {Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {CupEntity} from './cup.entity';
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
+import { UserEntity } from '@webserver/user/user.entity';
 
 @Injectable()
 export class CupService {
@@ -16,7 +17,7 @@ export class CupService {
         return await this.cupRepository.find();
     }
 
-    public async create(createCupDto: CreateCupDto): Promise<CupEntity> {
+    public async create(user: UserEntity, createCupDto: CreateCupDto): Promise<CupEntity> {
         //TODO: keine sonderzeichen im namen, nur maximal 32 zeichen lang bitte
         const cupByName = await this.cupRepository.findOneBy({
             name: createCupDto.name,
@@ -32,6 +33,8 @@ export class CupService {
 
         const newCup = new CupEntity();
         Object.assign(newCup, createCupDto);
+
+        newCup.manager = user;
 
         if (createCupDto.startTimestamp === undefined) {
             newCup.startTimestamp = new Date;
