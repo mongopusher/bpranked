@@ -15,7 +15,7 @@ export class BotService {
     private cachedUserInput: Map<number, Array<string>>;
 
     public constructor(@Inject(UserService) private readonly userService: UserService,
-                       @Inject(UserService) private readonly cupService: CupService) {
+                       @Inject(CupService) private readonly cupService: CupService) {
         this.cachedUserInput = new Map<number, Array<string>>();
     }
 
