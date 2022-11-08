@@ -26,8 +26,8 @@ export class BotService {
         this.bot = new TelegramBot(token, {polling: true});
 
         this.bot.onText(MESSAGE_REGEX.COMMAND, async (msg, match) => {
-            console.log(msg);
             const command = match[1];
+            console.log('Command detected: ' + command);
 
             if (command === Commands.START) {
                 return this.startBot(msg);
@@ -53,6 +53,8 @@ export class BotService {
         });
 
         this.bot.onText(MESSAGE_REGEX.TEXT, async (msg, match) => {
+
+
             const user = await this.userService.getByTelegramId(msg.from.id);
 
             if (!user) {
@@ -66,13 +68,14 @@ export class BotService {
 
             // TODO: check the whole file for usage of user id vs telegram id
             const text = match[0];
+            console.log(`User [${user.username}] is in [${user.botState}] and sent plain text: [${text}]`);
             const args = this.cachedUserInput.get(msg.from.id);
             switch (user.botState) {
                 case BotState.START_NEW_CUP:
                     args.push(text);
                     this.cachedUserInput.set(msg.from.id, args);
                     await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
-                    return await this.bot.sendMessage(msg.from.id, 'Pls send enddate');
+                    return await this.bot.sendMessage(msg.from.id, 'Please send end timestamp for the cup');
                 case BotState.NEW_CUP_NAME_SET:
                     const cup = await this.cupService.create(user, new CreateCupDto(args[0], new Date(text)));
                     await this.userService.updateBotstate(msg.from.id, BotState.ON);
@@ -88,8 +91,6 @@ export class BotService {
         const name = msg.from.first_name || msg.from.username;
 
         const user = await this.userService.getByTelegramId(msg.from.id);
-
-        console.log(user);
 
         this.cachedUserInput.set(msg.from.id, []);
 
