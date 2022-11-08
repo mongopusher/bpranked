@@ -28,7 +28,7 @@ export class BotService {
         this.bot.onText(MESSAGE_REGEX.COMMAND, async (msg, match) => {
             const command = match[1];
             console.log('Command detected: ' + command);
-
+            // TODO: check somewhere here if bot is actually running
             if (command === Commands.START) {
                 return this.startBot(msg);
             }
@@ -79,6 +79,7 @@ export class BotService {
                 case BotState.NEW_CUP_NAME_SET:
                     const cup = await this.cupService.create(user, new CreateCupDto(args[0], new Date(text)));
                     await this.userService.updateBotstate(msg.from.id, BotState.ON);
+                    // TODO: choose from preselected possbile dates or think of sth different
                     return await this.bot.sendMessage(msg.from.id, `Cup erstellt:  ${JSON.stringify(cup)}`);
                 default:
                     throw new Error('THIS SHOULD NEVER HAPPEN');
