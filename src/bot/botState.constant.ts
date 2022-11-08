@@ -3,7 +3,7 @@ export enum BotState {
     ON = 1,
 
     START_NEW_CUP = 20, // request name
-    NEW_CUP_NAME_SET = 20, // request duration
+    NEW_CUP_NAME_SET = 21, // request duration
 
 }
 
