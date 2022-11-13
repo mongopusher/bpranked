@@ -13,6 +13,8 @@ import {ChatErrorMessage} from "@webserver/bot/chat-error-message.constant";
 import {ChatError} from "@webserver/bot/error/chat-error";
 import moment from "moment";
 
+const DATE_FORMAT_DE = 'DD.MM.YYYY';
+
 @Injectable()
 export class BotService {
     private bot: TelegramBot;
@@ -37,7 +39,8 @@ export class BotService {
                 }
 
                 console.log(error);
-                return this.bot.sendMessage(msg.chat.id, `Ein unbekannter Fehler ist aufgetreten, bitte informiere den Administrator.\n${error}`);
+                return this.bot.sendMessage(msg.chat.id,
+                    `Ein unbekannter Fehler ist aufgetreten, bitte informiere den Administrator.\n${error}`);
             }
         });
     }
@@ -107,13 +110,17 @@ export class BotService {
 
             switch (error.message) {
                 case ChatErrorMessage.TOO_MANY_CHARACTERS:
-                    return this.bot.sendMessage(msg.chat.id, `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`)
+                    return this.bot.sendMessage(msg.chat.id,
+                        `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`)
                 case ChatErrorMessage.ILLEGAL_CHARACTER:
-                    return this.bot.sendMessage(msg.chat.id, `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`)
+                    return this.bot.sendMessage(msg.chat.id,
+                        `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`)
                 case ChatErrorMessage.INVALID_DATE_FORMAT:
-                    return this.bot.sendMessage(msg.chat.id, `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`)
+                    return this.bot.sendMessage(msg.chat.id,
+                        `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`)
                 case ChatErrorMessage.INVALID_DATE:
-                    return this.bot.sendMessage(msg.chat.id, `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`)
+                    return this.bot.sendMessage(msg.chat.id,
+                        `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`)
                 default:
                     return this.bot.sendMessage(msg.chat.id, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
             }
@@ -188,15 +195,16 @@ export class BotService {
 
         await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
 
-        return await this.bot.sendMessage(msg.chat.id, 'Bitte sende mir den Endzeitpunkt für den Cup im Format DD-MM-YYYY.');
+        return await this.bot.sendMessage(msg.chat.id, `Bitte sende mir den Endzeitpunkt für den Cup im Format ${DATE_FORMAT_DE}.`);
     }
 
     private async createCup(msg: Message, userInput: any, user: UserEntity): Promise<Message> {
-        if (moment(userInput, 'DD-MM-YYYY', true).isValid() === false) {
-            throw new ChatError(ChatErrorMessage.INVALID_DATE_FORMAT);
+        if (moment(userInput, DATE_FORMAT_DE, true).isValid() === false) {
+            throw new ChatError(ChatErrorMessage.INVALID_DATE_FORMAT, DATE_FORMAT_DE);
         }
+
         const now = moment();
-        const endDate = moment(userInput);
+        const endDate = moment(userInput, DATE_FORMAT_DE);
 
         if (endDate.isBefore(now)) {
             throw new ChatError(ChatErrorMessage.INVALID_DATE);
@@ -205,6 +213,6 @@ export class BotService {
 
         const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], endDate.toDate()));
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
-        return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format('DD.MM.YYYY')} um 23:59:59 Uhr`);
+        return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format(DATE_FORMAT_DE)} um 23:59:59 Uhr`);
     }
 }
