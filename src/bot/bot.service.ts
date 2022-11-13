@@ -106,9 +106,9 @@ export class BotService {
 
             switch (error.message) {
                 case ChatErrorMessage.TOO_MANY_CHARACTERS:
-                    return this.bot.sendMessage(msg.chat.id, `Bitte wähle einen kürzeren Namen. Maximal ${error.option} Zeichen.`)
+                    return this.bot.sendMessage(msg.chat.id, `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`)
                 case ChatErrorMessage.ILLEGAL_CHARACTER:
-                    return this.bot.sendMessage(msg.chat.id, `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.option}.`)
+                    return this.bot.sendMessage(msg.chat.id, `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`)
                 default:
                     return this.bot.sendMessage(msg.chat.id, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
             }
