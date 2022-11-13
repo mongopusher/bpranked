@@ -7,7 +7,6 @@ import {UserService} from "@webserver/user/user.service";
 import {CreateUserDto} from "@webserver/user/dto/createUser.dto";
 import {UserEntity} from "@webserver/user/user.entity";
 import {CupService} from "@webserver/cup/cup.service";
-import {MESSAGE_REGEX} from "@webserver/bot/messageRegex.constant";
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
 
 @Injectable()
@@ -25,62 +24,76 @@ export class BotService {
 
         this.bot = new TelegramBot(token, {polling: true});
 
-        this.bot.onText(MESSAGE_REGEX.COMMAND, async (msg, match) => {
-            const command = match[1];
-            console.log('Command detected: ' + command);
-            // TODO: check somewhere here if bot is actually running
-            if (command === Commands.START) {
-                return this.startBot(msg);
-            }
-
-            const user = await this.userService.getByTelegramId(msg.from.id)
-
-            if (!user) {
-                return;
-            }
-
-            switch (command) {
-                case Commands.STOP:
-                    return this.stopBot(user, msg);
-                case Commands.METADATA:
-                    return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
-                case Commands.NEW_CUP:
-                    return this.startNewCup(msg);
-                case Commands.HELP:
-                default:
-                    return this.sendHelp(msg.chat.id);
-            }
-        });
-
-        this.bot.onText(MESSAGE_REGEX.TEXT, async (msg, match) => {
-
-
-            const user = await this.userService.getByTelegramId(msg.from.id);
-
-            if (!user) {
-                return;
-            }
-
-            if (!acceptTextBotStates.includes(user.botState)) {
-                return;
-            }
-
-
-            // TODO: check the whole file for usage of user id vs telegram id
-            const userInput = match[0];
-            console.log(`User [${user.username}] is in [${user.botState}] and sent plain text: [${userInput}]`);
-            const cachedUserInput = this.cachedUserInput.get(msg.from.id);
-            switch (user.botState) {
-                case BotState.START_NEW_CUP:
-                    return this.setCupName(msg, userInput);
-                case BotState.NEW_CUP_NAME_SET:
-                    return this.createCup(msg, userInput, user);
-                default:
-                    throw new Error('THIS SHOULD NEVER HAPPEN');
+        this.bot.on('message', async (msg) => {
+            try {
+                await this.handleMessage(msg);
+            } catch (error) {
+                console.log(error);
+                await this.bot.sendMessage(msg.chat.id, `An unknown error occurred: ${error}`);
             }
         });
     }
 
+    private async handleMessage(msg: Message): Promise<Message> {
+        const userInput = msg.text.toString();
+
+        if (userInput.at(0) === '/') {
+            return await this.handleCommand(msg, userInput.slice(1, 0))
+        }
+
+        return await this.handleText(msg, userInput);
+    }
+
+    private async handleCommand(msg: Message, command: Commands | string | undefined): Promise<Message> {
+        if (command === Commands.START) {
+            return this.startBot(msg);
+        }
+
+        const user = await this.userService.getByTelegramId(msg.from.id)
+
+        if (!user) {
+            return;
+        }
+
+        switch (command) {
+            case Commands.STOP:
+                return this.stopBot(user, msg);
+            case Commands.METADATA:
+                return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
+            case Commands.NEW_CUP:
+                return this.startNewCup(msg);
+            case Commands.HELP:
+            default:
+                return this.sendHelp(msg.chat.id);
+        }
+    }
+
+    private async handleText(msg: Message, userInput: string): Promise<Message> {
+        const user = await this.userService.getByTelegramId(msg.from.id);
+
+        if (!user) {
+            return;
+        }
+
+        if (this.shouldAcceptTextFromUser(user) === false) {
+            return;
+        }
+
+        // TODO: check the whole file for usage of user id vs telegram id
+        console.log(`User [${user.username}] is in [${user.botState}] and sent plain text: [${userInput}]`);
+        switch (user.botState) {
+            case BotState.START_NEW_CUP:
+                return this.setCupName(msg, userInput);
+            case BotState.NEW_CUP_NAME_SET:
+                return this.createCup(msg, userInput, user);
+            default:
+                throw new Error('THIS SHOULD NEVER HAPPEN');
+        }
+    }
+
+    private shouldAcceptTextFromUser(user: UserEntity): boolean {
+        return acceptTextBotStates.includes(user.botState)
+    }
 
     private async startBot(msg: Message): Promise<Message> {
         const name = msg.from.first_name || msg.from.username;
