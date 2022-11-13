@@ -14,6 +14,7 @@ import {ChatError} from "@webserver/bot/error/chat-error";
 import moment from "moment";
 
 const DATE_FORMAT_DE = 'DD.MM.YYYY';
+const DATE_FORMAT_EXTENDED_DE = 'DD.MM.YYYY hh:mm:ss';
 
 @Injectable()
 export class BotService {
@@ -214,6 +215,6 @@ export class BotService {
 
         const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], endDate.toDate()));
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
-        return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format(DATE_FORMAT_DE)} um 23:59:59 Uhr`);
+        return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format(DATE_FORMAT_EXTENDED_DE)}`);
     }
 }
