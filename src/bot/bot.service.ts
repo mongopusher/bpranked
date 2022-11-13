@@ -67,20 +67,21 @@ export class BotService {
 
 
             // TODO: check the whole file for usage of user id vs telegram id
-            const text = match[0];
-            console.log(`User [${user.username}] is in [${user.botState}] and sent plain text: [${text}]`);
-            const args = this.cachedUserInput.get(msg.from.id);
+            const userInput = match[0];
+            console.log(`User [${user.username}] is in [${user.botState}] and sent plain text: [${userInput}]`);
+            const cachedUserInput = this.cachedUserInput.get(msg.from.id);
             switch (user.botState) {
                 case BotState.START_NEW_CUP:
-                    args.push(text);
-                    this.cachedUserInput.set(msg.from.id, args);
+                    cachedUserInput.push(userInput);
+                    this.cachedUserInput.set(msg.from.id, cachedUserInput);
                     await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
-                    return await this.bot.sendMessage(msg.from.id, 'Please send end timestamp for the cup');
+                    return await this.bot.sendMessage(msg.chat.id, 'Bitte sende mir den Endzeitpunkt für den Cup im Format YYYY-MM-DD.');
                 case BotState.NEW_CUP_NAME_SET:
-                    const cup = await this.cupService.create(user, new CreateCupDto(args[0], new Date(text)));
+                    const date = new Date(userInput);
+                    console.log(date);
+                    const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], date));
                     await this.userService.updateBotstate(msg.from.id, BotState.ON);
-                    // TODO: choose from preselected possbile dates or think of sth different
-                    return await this.bot.sendMessage(msg.from.id, `Cup erstellt:  ${JSON.stringify(cup)}`);
+                    return await this.bot.sendMessage(msg.chat.id, `Cup erstellt:  ${cup.name} endet am ${cup.endTimestamp}`);
                 default:
                     throw new Error('THIS SHOULD NEVER HAPPEN');
             }

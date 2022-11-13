@@ -1,4 +1,4 @@
 export const MESSAGE_REGEX = {
-    COMMAND: /\/(.+)/,
-    TEXT: /[a-zA-Z0-9 _-]+/,
+    COMMAND: /^\/(.+)$/m,
+    TEXT: /^[a-zA-Z0-9 _-]+$/m,
 }
