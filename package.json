@@ -24,6 +24,7 @@
     "dotenv": "^16.0.3",
     "jsonwebtoken": "^8.5.1",
     "module-alias": "^2.2.2",
+    "moment": "^2.29.4",
     "node-telegram-bot-api": "^0.59.0",
     "nodemon": "^2.0.18",
     "pg": "^8.7.3",

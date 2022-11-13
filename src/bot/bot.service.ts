@@ -11,6 +11,7 @@ import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
 import {REGEX} from "@webserver/bot/regex.constant";
 import {ChatErrorMessage} from "@webserver/bot/chat-error-message.constant";
 import {ChatError} from "@webserver/bot/error/chat-error";
+import moment from "moment";
 
 @Injectable()
 export class BotService {
@@ -35,8 +36,8 @@ export class BotService {
                     return this.handleChatError(msg, error);
                 }
 
-                console.log('UNKNOWN ERROR OCCURED');
-                return this.bot.sendMessage(msg.chat.id, `A unknown error occurred: ${error}`);
+                console.log(error);
+                return this.bot.sendMessage(msg.chat.id, `Ein unbekannter Fehler ist aufgetreten, bitte informiere den Administrator.\n${error}`);
             }
         });
     }
@@ -102,13 +103,17 @@ export class BotService {
 
     private async handleChatError(msg: Message, error: ChatError): Promise<Message> {
         if (error instanceof ChatError) {
-            console.log('CHAT ERROR OCCURED', error);
+            console.log(error);
 
             switch (error.message) {
                 case ChatErrorMessage.TOO_MANY_CHARACTERS:
                     return this.bot.sendMessage(msg.chat.id, `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`)
                 case ChatErrorMessage.ILLEGAL_CHARACTER:
                     return this.bot.sendMessage(msg.chat.id, `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`)
+                case ChatErrorMessage.INVALID_DATE_FORMAT:
+                    return this.bot.sendMessage(msg.chat.id, `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`)
+                case ChatErrorMessage.INVALID_DATE:
+                    return this.bot.sendMessage(msg.chat.id, `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`)
                 default:
                     return this.bot.sendMessage(msg.chat.id, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
             }
@@ -183,16 +188,23 @@ export class BotService {
 
         await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
 
-        return await this.bot.sendMessage(msg.chat.id, 'Bitte sende mir den Endzeitpunkt für den Cup im Format YYYY-MM-DD.');
+        return await this.bot.sendMessage(msg.chat.id, 'Bitte sende mir den Endzeitpunkt für den Cup im Format DD-MM-YYYY.');
     }
 
     private async createCup(msg: Message, userInput: any, user: UserEntity): Promise<Message> {
-        const date = new Date(userInput);
-        console.log(date);
+        if (moment(userInput, 'DD-MM-YYYY', true).isValid() === false) {
+            throw new ChatError(ChatErrorMessage.INVALID_DATE_FORMAT);
+        }
+        const now = moment();
+        const endDate = moment(userInput);
+
+        if (endDate.isBefore(now)) {
+            throw new ChatError(ChatErrorMessage.INVALID_DATE);
+        }
         const cachedUserInput = this.cachedUserInput.get(msg.from.id);
 
-        const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], date));
+        const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], endDate.toDate()));
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
-        return await this.bot.sendMessage(msg.chat.id, `Cup erstellt:  ${cup.name} endet am ${cup.endTimestamp}`);
+        return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format('DD.MM.YYYY')} um 23:59:59 Uhr`);
     }
 }
