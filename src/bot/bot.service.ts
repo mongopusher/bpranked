@@ -38,7 +38,7 @@ export class BotService {
         const userInput = msg.text.toString();
 
         if (userInput.slice(0, 1) === '/') {
-            return await this.handleCommand(msg, userInput.slice(1, 0))
+            return await this.handleCommand(msg, userInput.slice(1))
         }
 
         return await this.handleText(msg, userInput);
