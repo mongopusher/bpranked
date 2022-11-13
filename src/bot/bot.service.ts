@@ -14,7 +14,7 @@ import {ChatError} from "@webserver/bot/error/chat-error";
 import moment from "moment";
 
 const DATE_FORMAT_DE = 'DD.MM.YYYY';
-const DATE_FORMAT_EXTENDED_DE = 'DD.MM.YYYY hh:mm:ss';
+const DATE_FORMAT_EXTENDED_DE = 'DD.MM.YYYY HH:mm:ss';
 
 @Injectable()
 export class BotService {
@@ -57,6 +57,7 @@ export class BotService {
     }
 
     private async handleCommand(msg: Message, command: Command | string | undefined): Promise<Message> {
+
         if (command === Command.START) {
             return this.startBot(msg);
         }
@@ -66,6 +67,8 @@ export class BotService {
         if (!user) {
             return;
         }
+
+        // TODO: CHECK IF BOT IS RUNNING BEFORE CONTINUING WITH COMMANDS
 
         console.log(`processing command [${command}] for user [${user.username}]`)
 
@@ -172,7 +175,8 @@ export class BotService {
         return this.bot.sendMessage(chatId,
             '/help - zeige alle erlaubten Befehle\n' +
             '/start - startet den Bot\n' +
-            '/stop - stoppt den bot'
+            '/stop - stoppt den Bot\n' +
+            '/newcup - erstelle einen neuen Cup'
         );
     }
 
@@ -191,6 +195,8 @@ export class BotService {
         if (userInput.length > 32) {
             throw new ChatError(ChatErrorMessage.TOO_MANY_CHARACTERS, 32);
         }
+
+        //TODO: maybe Check for duplicate names?
 
         this.cachedUserInput.set(msg.from.id, [userInput]);
 
@@ -211,6 +217,7 @@ export class BotService {
         if (endDate.isBefore(now)) {
             throw new ChatError(ChatErrorMessage.INVALID_DATE);
         }
+
         const cachedUserInput = this.cachedUserInput.get(msg.from.id);
 
         const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], endDate.toDate()));
