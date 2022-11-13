@@ -1,6 +1,6 @@
 import {BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {hash} from 'bcrypt';
-import {BotState} from "@webserver/bot/botState.constant";
+import {BotState} from "@webserver/bot/bot-state.constant";
 import {CupEntity} from "@webserver/cup/cup.entity";
 
 @Entity({name: 'users'})

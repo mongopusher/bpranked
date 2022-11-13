@@ -9,7 +9,7 @@ import {LoginUserDto} from '@webserver/user/dto/loginUser.dto';
 import {compare} from 'bcrypt';
 import {UpdateUserDto} from '@webserver/user/dto/updateUser.dto';
 import * as fs from 'fs';
-import {BotState} from "@webserver/bot/botState.constant";
+import {BotState} from "@webserver/bot/bot-state.constant";
 
 @Injectable()
 export class UserService {

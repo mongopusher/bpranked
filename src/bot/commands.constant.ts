@@ -1,4 +1,4 @@
-export enum Commands {
+export enum Command {
     'HELP' = 'help',
     'START' = 'start',
     'STOP' = 'stop',

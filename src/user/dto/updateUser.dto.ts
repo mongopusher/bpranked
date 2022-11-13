@@ -1,5 +1,5 @@
 import {IsOptional} from 'class-validator';
-import {BotState} from "@webserver/bot/botState.constant";
+import {BotState} from "@webserver/bot/bot-state.constant";
 
 export class UpdateUserDto {
     public constructor(

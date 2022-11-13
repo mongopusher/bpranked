@@ -1,13 +1,16 @@
 import {Inject, Injectable} from "@nestjs/common";
 import TelegramBot, {Message} from "node-telegram-bot-api";
-import {Commands} from "@webserver/bot/commands.constant";
-import {acceptTextBotStates, BotState} from "@webserver/bot/botState.constant";
+import {Command} from "@webserver/bot/commands.constant";
+import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
 import {UserService} from "@webserver/user/user.service";
 import {CreateUserDto} from "@webserver/user/dto/createUser.dto";
 import {UserEntity} from "@webserver/user/user.entity";
 import {CupService} from "@webserver/cup/cup.service";
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
+import {REGEX} from "@webserver/bot/regex.constant";
+import {ChatErrorMessage} from "@webserver/bot/chat-error-message.constant";
+import {ChatError} from "@webserver/bot/error/chat-error";
 
 @Injectable()
 export class BotService {
@@ -28,8 +31,12 @@ export class BotService {
             try {
                 await this.handleMessage(msg);
             } catch (error) {
-                console.log(error);
-                await this.bot.sendMessage(msg.chat.id, `An unknown error occurred: ${error}`);
+                if (error instanceof ChatError) {
+                    return this.handleChatError(msg, error);
+                }
+
+                console.log('UNKNOWN ERROR OCCURED');
+                return this.bot.sendMessage(msg.chat.id, `A unknown error occurred: ${error}`);
             }
         });
     }
@@ -44,8 +51,8 @@ export class BotService {
         return await this.handleText(msg, userInput);
     }
 
-    private async handleCommand(msg: Message, command: Commands | string | undefined): Promise<Message> {
-        if (command === Commands.START) {
+    private async handleCommand(msg: Message, command: Command | string | undefined): Promise<Message> {
+        if (command === Command.START) {
             return this.startBot(msg);
         }
 
@@ -58,13 +65,13 @@ export class BotService {
         console.log(`processing command [${command}] for user [${user.username}]`)
 
         switch (command) {
-            case Commands.STOP:
+            case Command.STOP:
                 return this.stopBot(user, msg);
-            case Commands.METADATA:
+            case Command.METADATA:
                 return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
-            case Commands.NEW_CUP:
+            case Command.NEW_CUP:
                 return this.startNewCup(msg);
-            case Commands.HELP:
+            case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
         }
@@ -90,6 +97,21 @@ export class BotService {
                 return this.createCup(msg, userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
+        }
+    }
+
+    private async handleChatError(msg: Message, error: ChatError): Promise<Message> {
+        if (error instanceof ChatError) {
+            console.log('CHAT ERROR OCCURED', ChatError);
+
+            switch (error.message) {
+                case ChatErrorMessage.TOO_MANY_CHARACTERS:
+                    return this.bot.sendMessage(msg.chat.id, `Bitte wähle einen kürzeren Namen. Maximal ${error.option} Zeichen.`)
+                case ChatErrorMessage.ILLEGAL_CHARACTER:
+                    return this.bot.sendMessage(msg.chat.id, `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.option}.`)
+                default:
+                    return this.bot.sendMessage(msg.chat.id, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
+            }
         }
     }
 
@@ -137,7 +159,7 @@ export class BotService {
         return this.bot.sendMessage(chatId,
             '/help - zeige alle erlaubten Befehle\n' +
             '/start - startet den Bot\n' +
-            '/stop - stopppt den bot'
+            '/stop - stoppt den bot'
         );
     }
 
@@ -147,7 +169,15 @@ export class BotService {
         return this.bot.sendMessage(msg.chat.id, 'Erstelle neuen Cup. Bitte gib zuerst einen Namen für den Cup an.');
     }
 
-    private async setCupName(msg: Message, userInput: any): Promise<Message> {
+    private async setCupName(msg: Message, userInput: string): Promise<Message> | never {
+        if (userInput.match(REGEX.TEXT)[0] !== userInput) {
+            throw new ChatError(ChatErrorMessage.ILLEGAL_CHARACTER, 'Buchstaben, Zahlen, Leerzeichen, "-" und "_"');
+        }
+
+        if (userInput.length > 32) {
+            throw new ChatError(ChatErrorMessage.TOO_MANY_CHARACTERS, 32);
+        }
+
         this.cachedUserInput.set(msg.from.id, [userInput]);
 
         await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
