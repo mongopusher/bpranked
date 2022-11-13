@@ -55,6 +55,8 @@ export class BotService {
             return;
         }
 
+        console.log(`processing command [${command}] for user [${user.username}]`)
+
         switch (command) {
             case Commands.STOP:
                 return this.stopBot(user, msg);
