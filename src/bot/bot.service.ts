@@ -72,16 +72,9 @@ export class BotService {
             const cachedUserInput = this.cachedUserInput.get(msg.from.id);
             switch (user.botState) {
                 case BotState.START_NEW_CUP:
-                    cachedUserInput.push(userInput);
-                    this.cachedUserInput.set(msg.from.id, cachedUserInput);
-                    await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
-                    return await this.bot.sendMessage(msg.chat.id, 'Bitte sende mir den Endzeitpunkt für den Cup im Format YYYY-MM-DD.');
+                    return this.setCupName(msg, userInput);
                 case BotState.NEW_CUP_NAME_SET:
-                    const date = new Date(userInput);
-                    console.log(date);
-                    const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], date));
-                    await this.userService.updateBotstate(msg.from.id, BotState.ON);
-                    return await this.bot.sendMessage(msg.chat.id, `Cup erstellt:  ${cup.name} endet am ${cup.endTimestamp}`);
+                    return this.createCup(msg, userInput, user);
                 default:
                     throw new Error('THIS SHOULD NEVER HAPPEN');
             }
@@ -133,9 +126,27 @@ export class BotService {
         );
     }
 
-    private async startNewCup(msg: Message): Promise<any> {
+    private async startNewCup(msg: Message): Promise<Message> {
         await this.userService.updateBotstate(msg.from.id, BotState.START_NEW_CUP);
 
-        return this.bot.sendMessage(msg.from.id, 'Erstelle neuen Cup. Bitte gib zuerst einen Namen für den Cup an.');
+        return this.bot.sendMessage(msg.chat.id, 'Erstelle neuen Cup. Bitte gib zuerst einen Namen für den Cup an.');
+    }
+
+    private async setCupName(msg: Message, userInput: any): Promise<Message> {
+        this.cachedUserInput.set(msg.from.id, [userInput]);
+
+        await this.userService.updateBotstate(msg.from.id, BotState.NEW_CUP_NAME_SET);
+
+        return await this.bot.sendMessage(msg.chat.id, 'Bitte sende mir den Endzeitpunkt für den Cup im Format YYYY-MM-DD.');
+    }
+
+    private async createCup(msg: Message, userInput: any, user: UserEntity): Promise<Message> {
+        const date = new Date(userInput);
+        console.log(date);
+        const cachedUserInput = this.cachedUserInput.get(msg.from.id);
+
+        const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], date));
+        await this.userService.updateBotstate(msg.from.id, BotState.ON);
+        return await this.bot.sendMessage(msg.chat.id, `Cup erstellt:  ${cup.name} endet am ${cup.endTimestamp}`);
     }
 }
