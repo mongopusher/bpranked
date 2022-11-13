@@ -6,5 +6,6 @@ export class ChatError extends Error {
     public constructor(message: ChatErrorMessage, option?: any) {
         super();
         this.option = option;
+        Object.setPrototypeOf(this, ChatError.prototype);
     }
 }
