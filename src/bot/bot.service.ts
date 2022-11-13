@@ -37,10 +37,7 @@ export class BotService {
     private async handleMessage(msg: Message): Promise<Message> {
         const userInput = msg.text.toString();
 
-        console.log('handle message: ', msg.text);
-        console.log('handle message as string: ', userInput);
-
-        if (userInput.at(0) === '/') {
+        if (userInput.slice(0, 1) === '/') {
             return await this.handleCommand(msg, userInput.slice(1, 0))
         }
 
