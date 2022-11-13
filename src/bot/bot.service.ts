@@ -204,7 +204,8 @@ export class BotService {
         }
 
         const now = moment();
-        const endDate = moment(userInput, DATE_FORMAT_DE);
+        const endDateStartOfDay = moment(userInput, DATE_FORMAT_DE);
+        const endDate = endDateStartOfDay.endOf('day');
 
         if (endDate.isBefore(now)) {
             throw new ChatError(ChatErrorMessage.INVALID_DATE);
