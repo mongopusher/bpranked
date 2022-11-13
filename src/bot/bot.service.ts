@@ -171,7 +171,7 @@ export class BotService {
 
     private async setCupName(msg: Message, userInput: string): Promise<Message> | never {
         const match = userInput.match(REGEX.TEXT);
-        if (match.length === 0 || match[0] !== userInput) {
+        if (match === null || match[0] !== userInput) {
             throw new ChatError(ChatErrorMessage.ILLEGAL_CHARACTER, 'Buchstaben, Zahlen, Leerzeichen, "-" und "_"');
         }
 
