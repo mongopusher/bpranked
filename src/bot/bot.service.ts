@@ -102,7 +102,7 @@ export class BotService {
 
     private async handleChatError(msg: Message, error: ChatError): Promise<Message> {
         if (error instanceof ChatError) {
-            console.log('CHAT ERROR OCCURED', ChatError);
+            console.log('CHAT ERROR OCCURED', error);
 
             switch (error.message) {
                 case ChatErrorMessage.TOO_MANY_CHARACTERS:
@@ -170,7 +170,8 @@ export class BotService {
     }
 
     private async setCupName(msg: Message, userInput: string): Promise<Message> | never {
-        if (userInput.match(REGEX.TEXT)[0] !== userInput) {
+        const match = userInput.match(REGEX.TEXT);
+        if (match.length === 0 || match[0] !== userInput) {
             throw new ChatError(ChatErrorMessage.ILLEGAL_CHARACTER, 'Buchstaben, Zahlen, Leerzeichen, "-" und "_"');
         }
 
