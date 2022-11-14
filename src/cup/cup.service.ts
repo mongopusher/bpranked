@@ -29,6 +29,7 @@ export class CupService {
             },
             relations: {
                 manager: true,
+                attendees: true,
             }
         }
         return await this.cupRepository.find(searchOptions);
