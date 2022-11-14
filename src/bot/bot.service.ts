@@ -190,8 +190,12 @@ export class BotService {
         }
 
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
-
-        return this.bot.sendMessage(msg.chat.id, 'Aktueller Vorgang wurde abgebrochen!');
+        const options: SendMessageOptions = {
+            reply_markup: {
+                remove_keyboard: true,
+            },
+        }
+        return this.bot.sendMessage(msg.chat.id, infoText.concat('Aktueller Vorgang wurde abgebrochen!'), options);
     }
 
     private sendHelp(chatId: number): Promise<Message> {
@@ -255,6 +259,7 @@ export class BotService {
     private async startJoinCup(msg: Message): Promise<Message> {
         const now = moment();
 
+        // TODO: Get only cups that user is not part of yet
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
         const responseText = cups.map((cup) => {
@@ -275,12 +280,34 @@ export class BotService {
 
     private async joinCup(msg: Message, userInput: string, user: UserEntity): Promise<Message> {
         const now = moment();
-
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
-        if (cups.findIndex((cup) => cup.name === userInput) === -1) {
+        const cup = cups.find((cup) => cup.name === userInput);
+
+        if (cup === undefined) {
             const infoText = `Cup existiert nicht oder wurde bereits beendet.\n`;
             return this.cancelBot(msg, infoText);
         }
+
+        if (cup.attendees.includes(user)) {
+            const infoText = `Du nimmst an diesem Cup bereits teil.\n`;
+            return this.cancelBot(msg, infoText);
+        }
+
+        cup.attendees.push(user);
+
+        const newCup = await this.cupService.update(cup);
+        await this.resetKeyboard(msg);
+        const options: SendMessageOptions = {
+            reply_markup: {
+                remove_keyboard: true,
+            },
+            parse_mode: 'HTML',
+        }
+        return this.bot.sendMessage(msg.chat.id, `Du nimmst jetzt an <b>${newCup.name}</b> teil!`, options);
+    }
+
+    private async resetKeyboard(msg: Message): Promise<void> {
+        await this.bot.editMessageReplyMarkup([], {chat_id: msg.chat.id});
     }
 }

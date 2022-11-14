@@ -60,4 +60,8 @@ export class CupService {
 
         return await this.cupRepository.save(newCup);
     }
+
+    public async update(cup: CupEntity): Promise<CupEntity> {
+        return this.cupRepository.save(cup);
+    }
 }
