@@ -4,10 +4,10 @@ export class ReplyKeyboardUtils {
     public static get(data: Array<any>, columns: number, shouldOnlySendOnce = true): ReplyKeyboardMarkup {
         const keyboard: Array<Array<KeyboardButton>> = [];
 
-        for (const entry in data) {
+        for (let i = 0; i < data.length; i++) {
             const column = [];
-            for (let i = 0; i < columns; i++) {
-                column.push(data.shift());
+            for (let j = 0; j < columns; j++) {
+                column.push(data[i * columns + j]);
             }
             keyboard.push(column);
         }

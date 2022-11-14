@@ -1,5 +1,11 @@
 import {Inject, Injectable} from "@nestjs/common";
-import TelegramBot, {InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, SendBasicOptions} from "node-telegram-bot-api";
+import TelegramBot, {
+    InlineKeyboardMarkup,
+    Message,
+    ReplyKeyboardMarkup,
+    SendBasicOptions,
+    SendMessageOptions
+} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
@@ -237,11 +243,14 @@ export class BotService {
 
         const responseText = cups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
-            return `${cup.name} von ${cup.manager.username} endet am ${endDate}`;
-        });
+            return `*${cup.name}*" von _${cup.manager.username}_ endet am ${endDate}\n`;
+        }).reduce((acc, curr) => acc.concat(curr));
 
-        const options: SendBasicOptions = {
-            reply_markup: ReplyKeyboardUtils.get(responseText, 1),
+        const keyBoardData = cups.map((cup) => cup.name);
+
+        const options: SendMessageOptions = {
+            reply_markup: ReplyKeyboardUtils.get(keyBoardData, 1),
+            parse_mode: 'Markdown',
         };
 
         return await this.bot.sendMessage(msg.chat.id, JSON.stringify(responseText), options);
