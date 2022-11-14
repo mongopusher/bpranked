@@ -253,6 +253,6 @@ export class BotService {
             parse_mode: 'Markdown',
         };
 
-        return await this.bot.sendMessage(msg.chat.id, JSON.stringify(responseText), options);
+        return await this.bot.sendMessage(msg.chat.id, responseText, options);
     }
 }
