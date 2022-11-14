@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import TelegramBot, {InlineKeyboardMarkup, Message} from "node-telegram-bot-api";
+import TelegramBot, {InlineKeyboardMarkup, Message, ReplyKeyboardMarkup} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
@@ -239,8 +239,8 @@ export class BotService {
             return `${cup.name} von ${cup.manager.username} endet am ${endDate}`;
         });
 
-        const keyboardMarkup: InlineKeyboardMarkup = {
-            inline_keyboard: [
+        const keyboardMarkup: ReplyKeyboardMarkup = {
+            keyboard: [
                 [
                     {
                         text: 'BITCH_TEST_1',
