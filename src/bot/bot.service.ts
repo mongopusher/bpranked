@@ -241,13 +241,11 @@ export class BotService {
 
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
-        const responseArr = cups.map((cup) => {
+        const responseText = cups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
             return `${cup.name} von ${cup.manager.username} endet am ${endDate}\n`;
-        });
+        }).join('\n');
 
-        // const responseText = responseArr.reduce((acc, curr) => acc.concat(curr));
-        const responseText = 'MAMA!';
         const keyBoardData = cups.map((cup) => cup.name);
 
         const options: SendMessageOptions = {
