@@ -27,6 +27,9 @@ export class CupService {
             order: {
                 endTimestamp: 'ASC',
                 startTimestamp: 'DESC',
+            },
+            relations: {
+                manager: true,
             }
         }
         return await this.cupRepository.find({});
