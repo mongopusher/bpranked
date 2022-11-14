@@ -243,8 +243,8 @@ export class BotService {
 
         const responseText = cups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
-            return `${cup.name} von ${cup.manager.username} endet am ${endDate}`;
-        }).join('<br />');
+            return `<b>${cup.name}</b> von <i>${cup.manager.username}</i> endet am ${endDate}.`;
+        }).join('<br>');
 
         console.log(responseText);
 
@@ -252,7 +252,7 @@ export class BotService {
 
         const options: SendMessageOptions = {
             reply_markup: ReplyKeyboardUtils.get(keyBoardData, 1),
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
         };
 
         return await this.bot.sendMessage(msg.chat.id, responseText, options);
