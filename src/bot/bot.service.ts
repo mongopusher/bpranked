@@ -267,7 +267,10 @@ export class BotService {
             return foundUser === undefined;
         });
 
-        console.log(validCups);
+        if (validCups.length === 0) {
+            const infoText = `Du nimmst bereits an allen Cups teil!\n`;
+            return this.cancelBot(msg, infoText);
+        }
 
         const responseText = validCups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
