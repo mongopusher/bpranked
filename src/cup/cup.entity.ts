@@ -1,4 +1,4 @@
-import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {UserEntity} from "@webserver/user/user.entity";
 
 @Entity({name: 'cups'})
@@ -9,8 +9,12 @@ export class CupEntity {
     @Column()
     name: string;
 
-    @ManyToOne(() => UserEntity, (user) => user.cups)
+    @ManyToOne(() => UserEntity, (user) => user.ownedCups)
     manager: UserEntity;
+
+    @ManyToMany(() => UserEntity, (user) => user.ownedCups)
+    @JoinTable()
+    attendees: Array<UserEntity>;
 
     @Column()
     startTimestamp: Date;

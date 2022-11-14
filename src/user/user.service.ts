@@ -167,7 +167,8 @@ export class UserService {
                 token,
                 telegramId: user.telegramId,
                 expiresIn: 86400,
-                cups: user.cups,
+                ownedCups: user.ownedCups,
+                attendedCups: user.attendedCups,
             },
         };
     }

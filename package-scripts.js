@@ -20,10 +20,7 @@ module.exports = {
         script: 'npm run typeorm migration:generate -n --',
         description: 'run like nps "db.create src/migrations/DESCRIPTOR"',
       },
-      migrate: {
-        script: 'npm run typeorm migration:run -n --',
-        description: 'run like nps "db.migrate src/migrations/DESCRIPTOR"',
-      },
+      migrate: 'npm run typeorm migration:run -n --',
       clean: 'rm -rf src/migrations/* && nps db.drop && nps "db.create src/migrations/rollback" && nps db.migrate',
     },
     build: 'node_modules/.bin/nest build',
