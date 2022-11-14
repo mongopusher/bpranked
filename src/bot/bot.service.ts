@@ -68,7 +68,9 @@ export class BotService {
             return;
         }
 
-        // TODO: CHECK IF BOT IS RUNNING BEFORE CONTINUING WITH COMMANDS
+        if (user.botState === BotState.OFF) {
+            return;
+        }
 
         console.log(`processing command [${command}] for user [${user.username}]`)
 
@@ -79,6 +81,8 @@ export class BotService {
                 return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
             case Command.NEW_CUP:
                 return this.startNewCup(msg);
+            case Command.JOIN_CUP:
+                return this.joinCup(msg);
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -223,5 +227,13 @@ export class BotService {
         const cup = await this.cupService.create(user, new CreateCupDto(cachedUserInput[0], endDate.toDate()));
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
         return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format(DATE_FORMAT_EXTENDED_DE)}`);
+    }
+
+    private async joinCup(msg: Message): Promise<Message> {
+        const now = moment();
+
+        const cups = await this.cupService.getBeforeDate(now.toDate());
+
+        return await this.bot.sendMessage(msg.chat.id, JSON.stringify(cups));
     }
 }

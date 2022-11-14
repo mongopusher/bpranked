@@ -3,5 +3,6 @@ export enum Command {
     'START' = 'start',
     'STOP' = 'stop',
     'NEW_CUP' = 'newcup',
+    'JOIN_CUP' = 'joincup',
     'METADATA' = 'metadata',
 }

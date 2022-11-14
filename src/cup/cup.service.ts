@@ -1,9 +1,9 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {Repository} from 'typeorm';
+import {MoreThan, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {CupEntity} from './cup.entity';
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
-import { UserEntity } from '@webserver/user/user.entity';
+import {UserEntity} from '@webserver/user/user.entity';
 
 @Injectable()
 export class CupService {
@@ -15,6 +15,10 @@ export class CupService {
 
     public async getAll(): Promise<Array<CupEntity>> {
         return await this.cupRepository.find();
+    }
+
+    public async getBeforeDate(date: Date): Promise<Array<CupEntity>> {
+        return await this.cupRepository.findBy({endTimestamp: MoreThan(date)});
     }
 
     public async create(user: UserEntity, createCupDto: CreateCupDto): Promise<CupEntity> {
