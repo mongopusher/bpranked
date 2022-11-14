@@ -262,9 +262,9 @@ export class BotService {
         // TODO: Get only cups that user is not part of yet
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
-        const validCups = cups.filter((attendee) => {
-            console.log(attendee, user);
-            return attendee.id !== user.id
+        const validCups = cups.filter((cup) => {
+            const foundUser = cup.attendees.find((attendee) => attendee.id === user.id);
+            return foundUser === undefined;
         });
 
         console.log(validCups);
