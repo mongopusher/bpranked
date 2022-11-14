@@ -246,8 +246,8 @@ export class BotService {
             return `${cup.name} von ${cup.manager.username} endet am ${endDate}\n`;
         });
 
-        const responseText = responseArr.reduce((acc, curr) => acc.concat(curr));
-
+        // const responseText = responseArr.reduce((acc, curr) => acc.concat(curr));
+        const responseText = 'MAMA!';
         const keyBoardData = cups.map((cup) => cup.name);
 
         const options: SendMessageOptions = {
