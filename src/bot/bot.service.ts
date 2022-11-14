@@ -297,7 +297,7 @@ export class BotService {
         cup.attendees.push(user);
 
         const newCup = await this.cupService.update(cup);
-        await this.resetKeyboard(msg);
+
         const options: SendMessageOptions = {
             reply_markup: {
                 remove_keyboard: true,
@@ -305,9 +305,5 @@ export class BotService {
             parse_mode: 'HTML',
         }
         return this.bot.sendMessage(msg.chat.id, `Du nimmst jetzt an <b>${newCup.name}</b> teil!`, options);
-    }
-
-    private async resetKeyboard(msg: Message): Promise<void> {
-        await this.bot.editMessageReplyMarkup([], {chat_id: msg.chat.id});
     }
 }
