@@ -244,7 +244,7 @@ export class BotService {
         const responseText = cups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
             return `<b>${cup.name}</b> von <i>${cup.manager.username}</i> endet am ${endDate}.`;
-        }).join('<br>');
+        }).join('\n');
 
         console.log(responseText);
 
