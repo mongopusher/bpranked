@@ -32,7 +32,7 @@ export class CupService {
                 manager: true,
             }
         }
-        return await this.cupRepository.find({});
+        return await this.cupRepository.find(searchOptions);
     }
 
     public async create(user: UserEntity, createCupDto: CreateCupDto): Promise<CupEntity> {
