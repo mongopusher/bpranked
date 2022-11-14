@@ -82,7 +82,7 @@ export class BotService {
             case Command.NEW_CUP:
                 return this.startNewCup(msg);
             case Command.CANCEL:
-                return this.cancelBot(user, msg);
+                return this.cancelBot(msg);
             case Command.JOIN_CUP:
                 return this.joinCup(msg);
             case Command.HELP:
