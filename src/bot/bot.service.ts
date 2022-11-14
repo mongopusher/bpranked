@@ -84,7 +84,7 @@ export class BotService {
             case Command.CANCEL:
                 return this.cancelBot(msg);
             case Command.JOIN_CUP:
-                return this.joinCup(msg);
+                return this.startJoinCup(msg);
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -109,6 +109,8 @@ export class BotService {
                 return this.setCupName(msg, userInput);
             case BotState.NEW_CUP_NAME_SET:
                 return this.createCup(msg, userInput, user);
+            case BotState.JOIN_CUP:
+                return this.joinCup(msg, userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
         }
@@ -121,16 +123,19 @@ export class BotService {
             switch (error.message) {
                 case ChatErrorMessage.TOO_MANY_CHARACTERS:
                     return this.bot.sendMessage(msg.chat.id,
-                        `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`)
+                        `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`);
                 case ChatErrorMessage.ILLEGAL_CHARACTER:
                     return this.bot.sendMessage(msg.chat.id,
-                        `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`)
+                        `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`);
                 case ChatErrorMessage.INVALID_DATE_FORMAT:
                     return this.bot.sendMessage(msg.chat.id,
-                        `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`)
+                        `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`);
                 case ChatErrorMessage.INVALID_DATE:
                     return this.bot.sendMessage(msg.chat.id,
-                        `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`)
+                        `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`);
+                case ChatErrorMessage.DUPLICATE_NAME:
+                    return this.bot.sendMessage(msg.chat.id,
+                        `Name bereits vergeben. Bitte versuche es erneut.`);
                 default:
                     return this.bot.sendMessage(msg.chat.id, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
             }
@@ -177,7 +182,7 @@ export class BotService {
         return this.bot.sendMessage(msg.chat.id, getFarewell(name));
     }
 
-    private async cancelBot(msg: Message): Promise<Message> {
+    private async cancelBot(msg: Message, infoText = ''): Promise<Message> {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         if (user.botState === BotState.ON) {
@@ -186,7 +191,7 @@ export class BotService {
 
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
 
-        return this.bot.sendMessage(msg.chat.id, 'Aktuellen Vorgang abgebrochen!');
+        return this.bot.sendMessage(msg.chat.id, 'Aktueller Vorgang wurde abgebrochen!');
     }
 
     private sendHelp(chatId: number): Promise<Message> {
@@ -214,7 +219,11 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.TOO_MANY_CHARACTERS, 32);
         }
 
-        //TODO: maybe Check for duplicate names?
+        const cups = await this.cupService.getAll();
+
+        if (cups.findIndex((cup) => cup.name === userInput) !== -1) {
+            throw new ChatError(ChatErrorMessage.DUPLICATE_NAME);
+        }
 
         this.cachedUserInput.set(msg.from.id, [userInput]);
 
@@ -243,7 +252,7 @@ export class BotService {
         return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format(DATE_FORMAT_EXTENDED_DE)}`);
     }
 
-    private async joinCup(msg: Message): Promise<Message> {
+    private async startJoinCup(msg: Message): Promise<Message> {
         const now = moment();
 
         const cups = await this.cupService.getBeforeDate(now.toDate());
@@ -253,8 +262,6 @@ export class BotService {
             return `<b>${cup.name}</b> von <i>${cup.manager.username}</i> endet am ${endDate}.`;
         }).join('\n');
 
-        console.log(responseText);
-
         const keyBoardData = cups.map((cup) => cup.name);
 
         const options: SendMessageOptions = {
@@ -262,6 +269,18 @@ export class BotService {
             parse_mode: 'HTML',
         };
 
+        await this.userService.updateBotstate(msg.from.id, BotState.JOIN_CUP);
         return await this.bot.sendMessage(msg.chat.id, responseText, options);
+    }
+
+    private async joinCup(msg: Message, userInput: string, user: UserEntity): Promise<Message> {
+        const now = moment();
+
+        const cups = await this.cupService.getBeforeDate(now.toDate());
+
+        if (cups.findIndex((cup) => cup.name === userInput) === -1) {
+            const infoText = `Cup existiert nicht oder wurde bereits beendet.\n`;
+            return this.cancelBot(msg, infoText);
+        }
     }
 }
