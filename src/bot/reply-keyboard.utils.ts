@@ -4,7 +4,7 @@ export class ReplyKeyboardUtils {
     public static get(data: Array<any>, columns: number, shouldOnlySendOnce = true): ReplyKeyboardMarkup {
         const keyboard: Array<Array<KeyboardButton>> = [];
 
-        for (const entry of data) {
+        for (const entry in data) {
             const column = [];
             for (let i = 0; i < columns; i++) {
                 column.push(data.shift());
