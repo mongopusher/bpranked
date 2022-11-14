@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import TelegramBot, {InlineKeyboardMarkup, Message, ReplyKeyboardMarkup} from "node-telegram-bot-api";
+import TelegramBot, {InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, SendBasicOptions} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
@@ -12,6 +12,7 @@ import {REGEX} from "@webserver/bot/regex.constant";
 import {ChatErrorMessage} from "@webserver/bot/chat-error-message.constant";
 import {ChatError} from "@webserver/bot/error/chat-error";
 import moment from "moment";
+import {ReplyKeyboardUtils} from "@webserver/bot/reply-keyboard.utils";
 
 const DATE_FORMAT_DE = 'DD.MM.YYYY';
 const DATE_FORMAT_EXTENDED_DE = 'DD.MM.YYYY HH:mm:ss';
@@ -239,28 +240,9 @@ export class BotService {
             return `${cup.name} von ${cup.manager.username} endet am ${endDate}`;
         });
 
-        const keyboardMarkup: ReplyKeyboardMarkup = {
-            keyboard: [
-                [
-                    {
-                        text: 'BITCH_TEST_1',
-                    },
-                    {
-                        text: 'BITCH_TEST_2',
-                    },
-                ],
-                [
-                    {
-                        text: 'BITCH_TEST_3',
-                    },
-                    {
-                        text: 'BITCH_TEST_4',
-                    },
-                ]
-            ]
+        const options: SendBasicOptions = {
+            reply_markup: ReplyKeyboardUtils.get(responseText, 1),
         };
-
-        const options = {reply_markup: keyboardMarkup};
 
         return await this.bot.sendMessage(msg.chat.id, JSON.stringify(responseText), options);
     }
