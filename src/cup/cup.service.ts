@@ -4,7 +4,6 @@ import {InjectRepository} from '@nestjs/typeorm';
 import {CupEntity} from './cup.entity';
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
 import {UserEntity} from '@webserver/user/user.entity';
-import {FindOptions} from "@nestjs/schematics";
 import {FindManyOptions} from "typeorm/find-options/FindManyOptions";
 
 @Injectable()

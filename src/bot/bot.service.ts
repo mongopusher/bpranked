@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import TelegramBot, {Message} from "node-telegram-bot-api";
+import TelegramBot, {InlineKeyboardMarkup, Message} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
@@ -57,7 +57,6 @@ export class BotService {
     }
 
     private async handleCommand(msg: Message, command: Command | string | undefined): Promise<Message> {
-
         if (command === Command.START) {
             return this.startBot(msg);
         }
@@ -73,6 +72,7 @@ export class BotService {
         }
 
         console.log(`processing command [${command}] for user [${user.username}]`)
+        void await this.bot.sendChatAction(msg.chat.id, 'typing');
 
         switch (command) {
             case Command.STOP:
@@ -239,6 +239,29 @@ export class BotService {
             return `${cup.name} von ${cup.manager.username} endet am ${endDate}`;
         });
 
-        return await this.bot.sendMessage(msg.chat.id, JSON.stringify(responseText));
+        const keyboardMarkup: InlineKeyboardMarkup = {
+            inline_keyboard: [
+                [
+                    {
+                        text: 'BITCH_TEST_1',
+                    },
+                    {
+                        text: 'BITCH_TEST_2',
+                    },
+                ],
+                [
+                    {
+                        text: 'BITCH_TEST_3',
+                    },
+                    {
+                        text: 'BITCH_TEST_4',
+                    },
+                ]
+            ]
+        };
+
+        const options = {reply_markup: keyboardMarkup};
+
+        return await this.bot.sendMessage(msg.chat.id, JSON.stringify(responseText), options);
     }
 }
