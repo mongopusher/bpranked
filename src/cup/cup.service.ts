@@ -4,6 +4,8 @@ import {InjectRepository} from '@nestjs/typeorm';
 import {CupEntity} from './cup.entity';
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
 import {UserEntity} from '@webserver/user/user.entity';
+import {FindOptions} from "@nestjs/schematics";
+import {FindManyOptions} from "typeorm/find-options/FindManyOptions";
 
 @Injectable()
 export class CupService {
@@ -18,7 +20,16 @@ export class CupService {
     }
 
     public async getBeforeDate(date: Date): Promise<Array<CupEntity>> {
-        return await this.cupRepository.findBy({endTimestamp: MoreThan(date)});
+        const searchOptions: FindManyOptions = {
+            where: {
+                endTimestamp: MoreThan(date),
+            },
+            order: {
+                endTimestamp: 'ASC',
+                startTimestamp: 'DESC',
+            }
+        }
+        return await this.cupRepository.find({});
     }
 
     public async create(user: UserEntity, createCupDto: CreateCupDto): Promise<CupEntity> {

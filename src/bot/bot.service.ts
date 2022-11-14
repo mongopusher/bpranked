@@ -234,6 +234,11 @@ export class BotService {
 
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
-        return await this.bot.sendMessage(msg.chat.id, JSON.stringify(cups));
+        const responseText = cups.map((cup) => {
+            const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
+            return `${cup.name} von ${cup.manager.username} endet am ${endDate}`;
+        });
+
+        return await this.bot.sendMessage(msg.chat.id, JSON.stringify(responseText));
     }
 }
