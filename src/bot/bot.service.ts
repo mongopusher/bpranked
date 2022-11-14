@@ -289,6 +289,8 @@ export class BotService {
             return this.cancelBot(msg, infoText);
         }
 
+        console.log({attendees: cup.attendees});
+
         if (cup.attendees.includes(user)) {
             const infoText = `Du nimmst an diesem Cup bereits teil.\n`;
             return this.cancelBot(msg, infoText);
