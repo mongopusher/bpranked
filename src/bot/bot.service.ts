@@ -84,7 +84,7 @@ export class BotService {
             case Command.CANCEL:
                 return this.cancelBot(msg);
             case Command.JOIN_CUP:
-                return this.startJoinCup(msg);
+                return this.startJoinCup(msg, user);
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -256,13 +256,15 @@ export class BotService {
         return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format(DATE_FORMAT_EXTENDED_DE)}`);
     }
 
-    private async startJoinCup(msg: Message): Promise<Message> {
+    private async startJoinCup(msg: Message, user: UserEntity): Promise<Message> {
         const now = moment();
 
         // TODO: Get only cups that user is not part of yet
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
-        const responseText = cups.map((cup) => {
+        const validCups = cups.filter((attendee) => attendee.id !== user.id);
+
+        const responseText = validCups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
             return `<b>${cup.name}</b> von <i>${cup.manager.username}</i> endet am ${endDate}.`;
         }).join('\n');
@@ -291,7 +293,7 @@ export class BotService {
 
         console.log({attendees: cup.attendees});
 
-        if (cup.attendees.includes(user)) {
+        if (cup.attendees.find((attendee) => attendee.id === user.id) !== undefined) {
             const infoText = `Du nimmst an diesem Cup bereits teil.\n`;
             return this.cancelBot(msg, infoText);
         }
