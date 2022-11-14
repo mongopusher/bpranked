@@ -243,21 +243,17 @@ export class BotService {
 
         const responseArr = cups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
-            return `*${cup.name}*" von _${cup.manager.username}_ endet am ${endDate}\n`;
+            return `${cup.name} von ${cup.manager.username} endet am ${endDate}\n`;
         });
-        console.log({responseArr});
 
         const responseText = responseArr.reduce((acc, curr) => acc.concat(curr));
-        console.log({responseText});
 
         const keyBoardData = cups.map((cup) => cup.name);
-        console.log({keyBoardData});
 
         const options: SendMessageOptions = {
             reply_markup: ReplyKeyboardUtils.get(keyBoardData, 1),
             parse_mode: 'Markdown',
         };
-        console.log({options});
 
         return await this.bot.sendMessage(msg.chat.id, responseText, options);
     }
