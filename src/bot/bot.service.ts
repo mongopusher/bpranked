@@ -1,11 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import TelegramBot, {
-    InlineKeyboardMarkup,
-    Message,
-    ReplyKeyboardMarkup,
-    SendBasicOptions,
-    SendMessageOptions
-} from "node-telegram-bot-api";
+import TelegramBot, {Message, SendMessageOptions} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
@@ -79,7 +73,6 @@ export class BotService {
         }
 
         console.log(`processing command [${command}] for user [${user.username}]`)
-        void await this.bot.sendChatAction(msg.chat.id, 'typing');
 
         switch (command) {
             case Command.STOP:
@@ -88,6 +81,8 @@ export class BotService {
                 return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
             case Command.NEW_CUP:
                 return this.startNewCup(msg);
+            case Command.CANCEL:
+                return this.cancelBot(user, msg);
             case Command.JOIN_CUP:
                 return this.joinCup(msg);
             case Command.HELP:
@@ -180,6 +175,18 @@ export class BotService {
         this.cachedUserInput.delete(msg.from.id);
         await this.userService.updateBotstate(msg.from.id, BotState.OFF);
         return this.bot.sendMessage(msg.chat.id, getFarewell(name));
+    }
+
+    private async cancelBot(msg: Message): Promise<Message> {
+        const user = await this.userService.getByTelegramId(msg.from.id);
+
+        if (user.botState === BotState.ON) {
+            return this.bot.sendMessage(msg.chat.id, 'Mir doch egal, hab grad eh nichts gemacht...');
+        }
+
+        await this.userService.updateBotstate(msg.from.id, BotState.ON);
+
+        return this.bot.sendMessage(msg.chat.id, 'Aktuellen Vorgang abgebrochen!');
     }
 
     private sendHelp(chatId: number): Promise<Message> {
