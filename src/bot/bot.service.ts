@@ -325,7 +325,7 @@ export class BotService {
         const cups = await this.cupService.getAttendedCups(user);
 
         const textReply = cups.map((cup) => {
-            return `<b>${cup.manager.username}</b>s ${cup.name}: <br>` +
+            return `<b>${cup.manager.username}</b>s ${cup.name}: \n` +
                 `${cup.startTimestamp} - ${cup.startTimestamp}`;
         }).join();
 
