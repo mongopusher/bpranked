@@ -85,6 +85,8 @@ export class BotService {
                 return this.cancelBot(msg);
             case Command.JOIN_CUP:
                 return this.startJoinCup(msg, user);
+            case Command.GET_JOINED_CUPS:
+                return this.getCupsStat(msg, user);
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -259,25 +261,25 @@ export class BotService {
     private async startJoinCup(msg: Message, user: UserEntity): Promise<Message> {
         const now = moment();
 
-        // TODO: Get only cups that user is not part of yet
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
-        const validCups = cups.filter((cup) => {
+        // Get only cups not attended
+        const filteredCups = cups.filter((cup) => {
             const foundUser = cup.attendees.find((attendee) => attendee.id === user.id);
             return foundUser === undefined;
         });
 
-        if (validCups.length === 0) {
+        if (filteredCups.length === 0) {
             const infoText = `Du nimmst bereits an allen Cups teil!\n`;
             return this.cancelBot(msg, infoText);
         }
 
-        const responseText = validCups.map((cup) => {
+        const responseText = filteredCups.map((cup) => {
             const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
             return `<b>${cup.name}</b> von <i>${cup.manager.username}</i> endet am ${endDate}.`;
         }).join('\n');
 
-        const keyBoardData = cups.map((cup) => cup.name);
+        const keyBoardData = filteredCups.map((cup) => cup.name);
 
         const options: SendMessageOptions = {
             reply_markup: ReplyKeyboardUtils.get(keyBoardData, 1),
@@ -317,5 +319,23 @@ export class BotService {
             parse_mode: 'HTML',
         }
         return this.bot.sendMessage(msg.chat.id, `Du nimmst jetzt an <b>${newCup.name}</b> teil!`, options);
+    }
+
+    public async getCupsStat(msg: Message, user: UserEntity) {
+        const cups = await this.cupService.getAttendedCups(user);
+
+        const textReply = cups.map((cup) => {
+            return `<b>${cup.manager.username}</b>s ${cup.name}: <br>` +
+                `${cup.startTimestamp} - ${cup.startTimestamp}`;
+        }).join();
+
+        const options: SendMessageOptions = {
+            reply_markup: {
+                remove_keyboard: true,
+            },
+            parse_mode: 'HTML',
+        };
+
+        return this.bot.sendMessage(msg.chat.id, textReply, options)
     }
 }
