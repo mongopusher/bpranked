@@ -5,6 +5,7 @@ export enum Command {
     'CANCEL' = 'cancel',
     'NEW_CUP' = 'newcup',
     'JOIN_CUP' = 'joincup',
-    'GET_JOINED_CUPS' = 'getcups',
+    'GET_JOINED_CUPS' = 'mycups',
+    'GET_ALL_CUPS' = 'getcups',
     'METADATA' = 'metadata',
 }

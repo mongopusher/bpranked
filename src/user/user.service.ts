@@ -142,6 +142,20 @@ export class UserService {
         return await this.userRepository.findOne(searchOptions);
     }
 
+    public async getByIdWithRelations(id: number): Promise<UserEntity | null> {
+        if (id === undefined || id === null) {
+            return null;
+        }
+
+        const searchOptions: FindOneOptions<UserEntity> = {
+            where: {id}, relations: {
+                attendedCups: true,
+            }
+        };
+
+        return await this.userRepository.findOne(searchOptions);
+    }
+
     public async getByTelegramId(
         telegramId: number,
         withPassword = false,

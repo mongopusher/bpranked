@@ -85,8 +85,10 @@ export class BotService {
                 return this.cancelBot(msg);
             case Command.JOIN_CUP:
                 return this.startJoinCup(msg, user);
-            case Command.GET_JOINED_CUPS:
-                return this.getCupsStat(msg, user);
+            case Command.GET_ALL_CUPS:
+                return this.getAllCups(msg);
+                case Command.GET_JOINED_CUPS:
+                return this.getJoinedCups(msg, user);
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -104,7 +106,6 @@ export class BotService {
             return;
         }
 
-        // TODO: check the whole file for usage of user id vs telegram id
         console.log(`User [${user.username}] is in [${user.botState}] and sent plain text: [${userInput}]`);
         switch (user.botState) {
             case BotState.START_NEW_CUP:
@@ -321,8 +322,8 @@ export class BotService {
         return this.bot.sendMessage(msg.chat.id, `Du nimmst jetzt an <b>${newCup.name}</b> teil!`, options);
     }
 
-    public async getCupsStat(msg: Message, user: UserEntity) {
-        const cups = await this.cupService.getAttendedCups(user);
+    public async getAllCups(msg: Message) {
+        const cups = await this.cupService.getAllWithRelations();
 
         const textReply = cups.map((cup) => {
             const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
@@ -346,5 +347,11 @@ export class BotService {
         };
 
         return this.bot.sendMessage(msg.chat.id, textReply, options)
+    }
+
+    private async getJoinedCups(msg: Message, user: UserEntity): Promise<Message> {
+        console.log(user);
+
+        return;
     }
 }

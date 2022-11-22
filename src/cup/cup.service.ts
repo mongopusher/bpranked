@@ -18,7 +18,7 @@ export class CupService {
         return await this.cupRepository.find();
     }
 
-    public async getAttendedCups(user: UserEntity): Promise<Array<CupEntity>> {
+    public async getAllWithRelations(): Promise<Array<CupEntity>> {
         const searchOptions: FindManyOptions = {
             order: {
                 endTimestamp: 'ASC',
