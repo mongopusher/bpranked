@@ -144,6 +144,7 @@ export class UserService {
         }
 
         console.log(searchOptions);
+        return this.userRepository.createQueryBuilder('user').leftJoinAndSelect('user.attendedCups', 'cups').getOne();
 
         return await this.userRepository.findOne(searchOptions);
     }
