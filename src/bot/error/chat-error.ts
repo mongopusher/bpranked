@@ -1,4 +1,4 @@
-import {ChatErrorMessage} from "@webserver/bot/chat-error-message.constant";
+import {ChatErrorMessage} from "@webserver/bot/error/chat-error-message.constant";
 
 export class ChatError extends Error {
     public data: any;

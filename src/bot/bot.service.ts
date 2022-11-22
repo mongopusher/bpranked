@@ -2,17 +2,17 @@ import {Inject, Injectable} from "@nestjs/common";
 import TelegramBot, {Message, SendMessageOptions} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
-import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/message.utils";
+import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/utils/message.utils";
 import {UserService} from "@webserver/user/user.service";
 import {CreateUserDto} from "@webserver/user/dto/createUser.dto";
 import {UserEntity} from "@webserver/user/user.entity";
 import {CupService} from "@webserver/cup/cup.service";
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
 import {REGEX} from "@webserver/bot/regex.constant";
-import {ChatErrorMessage} from "@webserver/bot/chat-error-message.constant";
+import {ChatErrorMessage} from "@webserver/bot/error/chat-error-message.constant";
 import {ChatError} from "@webserver/bot/error/chat-error";
 import moment from "moment";
-import {ReplyKeyboardUtils} from "@webserver/bot/reply-keyboard.utils";
+import {ChatUtils} from "@webserver/bot/utils/chat.utils";
 
 const DATE_FORMAT_DE = 'DD.MM.YYYY';
 const DATE_FORMAT_EXTENDED_DE = 'DD.MM.YYYY HH:mm:ss';
@@ -282,7 +282,7 @@ export class BotService {
         const keyBoardData = filteredCups.map((cup) => cup.name);
 
         const options: SendMessageOptions = {
-            reply_markup: ReplyKeyboardUtils.get(keyBoardData, 1),
+            reply_markup: ChatUtils.getKeyboardMarkup(keyBoardData, 1),
             parse_mode: 'HTML',
         };
 
@@ -297,14 +297,14 @@ export class BotService {
         const cup = cups.find((cup) => cup.name === userInput);
 
         if (cup === undefined) {
-            const infoText = `Cup existiert nicht oder wurde bereits beendet.\n`;
+            const infoText = 'Cup existiert nicht oder wurde bereits beendet.\n';
             return this.cancelBot(msg, infoText);
         }
 
         console.log({attendees: cup.attendees});
 
         if (cup.attendees.find((attendee) => attendee.id === user.id) !== undefined) {
-            const infoText = `Du nimmst an diesem Cup bereits teil.\n`;
+            const infoText = 'Du nimmst an diesem Cup bereits teil.\n';
             return this.cancelBot(msg, infoText);
         }
 
@@ -325,9 +325,11 @@ export class BotService {
         const cups = await this.cupService.getAttendedCups(user);
 
         const textReply = cups.map((cup) => {
-            return `<b>${cup.manager.username}</b>s ${cup.name}: \n` +
-                `${cup.startTimestamp} - ${cup.startTimestamp}`;
-        }).join();
+            return [
+                `<b>${cup.manager.username}</b>s ${cup.name}:`,
+                `${moment(cup.startTimestamp).format(DATE_FORMAT_DE)} - ${moment(cup.startTimestamp).format(DATE_FORMAT_DE)}`
+            ].join('\n');
+        }).join('\n\n');
 
         const options: SendMessageOptions = {
             reply_markup: {

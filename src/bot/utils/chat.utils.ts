@@ -1,7 +1,7 @@
 import {KeyboardButton, ReplyKeyboardMarkup} from "node-telegram-bot-api";
 
-export class ReplyKeyboardUtils {
-    public static get(data: Array<any>, columns: number, shouldOnlySendOnce = true): ReplyKeyboardMarkup {
+export class ChatUtils {
+    public static getKeyboardMarkup(data: Array<any>, columns: number, shouldOnlySendOnce = true): ReplyKeyboardMarkup {
         const keyboard: Array<Array<KeyboardButton>> = [];
 
         for (let i = 0; i < data.length; i++) {
