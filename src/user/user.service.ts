@@ -143,6 +143,8 @@ export class UserService {
             searchOptions.select = ['username', 'password'];
         }
 
+        console.log(searchOptions);
+
         return await this.userRepository.findOne(searchOptions);
     }
 
