@@ -10,6 +10,7 @@ import {compare} from 'bcrypt';
 import {UpdateUserDto} from '@webserver/user/dto/updateUser.dto';
 import * as fs from 'fs';
 import {BotState} from "@webserver/bot/bot-state.constant";
+import {TUser} from "@webserver/user/types/user.type";
 
 @Injectable()
 export class UserService {
@@ -73,10 +74,10 @@ export class UserService {
         return user;
     }
 
-    public async updateBotstate(telegramId: number, botState: BotState): Promise<UserEntity> {
+    public async updateBotstate(telegramId: number, botState: BotState): Promise<TUser> {
         const updateResult = await this.userRepository.update(
-            {telegramId},
-            {botState},
+            { telegramId },
+            { botState },
         );
 
         if (updateResult.affected !== 1) {
@@ -90,16 +91,16 @@ export class UserService {
     }
 
     public async updateUser(
-        telegramId: number,
+        id: number,
         updateUserDto: UpdateUserDto,
     ): Promise<UserEntity> {
-        const user = await this.getByTelegramId(telegramId, true);
+        const user = await this.getById(id, true);
 
         const username = updateUserDto.username ?? user.username;
 
         if (updateUserDto.username !== undefined) {
             const possibleDuplicateByUsername = await this.userRepository.findOneBy({
-                id: Not(telegramId),
+                id: Not(id),
                 username,
             });
 
@@ -112,10 +113,10 @@ export class UserService {
         }
 
 
-        Object.assign(user, {username});
+        Object.assign(user, { username });
         const updateResult = await this.userRepository.update(
-            {telegramId},
-            {username},
+            { id },
+            { username },
         );
         if (updateResult.affected !== 1) {
             console.error(
@@ -124,49 +125,29 @@ export class UserService {
             );
         }
 
-        return await this.getById(telegramId);
+        return await this.getById(id);
     }
 
-    public async getById(
-        id: number,
-        withPassword = false,
-    ): Promise<UserEntity | null> {
+    public async getById(id: number, withPassword = false, withRelations = false): Promise<UserEntity | null> {
         if (id === undefined || id === null) {
             return null;
         }
 
-        const searchOptions: FindOneOptions = withPassword
-            ? {where: {id}, select: ['username', 'password', 'email']}
-            : {where: {id}};
+        const searchOptions: FindOneOptions<UserEntity> = { where: { id } };
+
+        if (withRelations === true) {
+            searchOptions.relations = { attendedCups: true, ownedCups: true };
+        }
+
+        if (withPassword === true) {
+            searchOptions.select = ['username', 'password'];
+        }
 
         return await this.userRepository.findOne(searchOptions);
     }
 
-    public async getByIdWithRelations(id: number): Promise<UserEntity | null> {
-        if (id === undefined || id === null) {
-            return null;
-        }
-
-        const searchOptions: FindOneOptions<UserEntity> = {
-            where: {id}, relations: {
-                attendedCups: true,
-            }
-        };
-
-        return await this.userRepository.findOne(searchOptions);
-    }
-
-    public async getByTelegramId(
-        telegramId: number,
-        withPassword = false,
-    ): Promise<UserEntity | null> {
-        if (telegramId === undefined || telegramId === null) {
-            return null;
-        }
-
-        const searchOptions: FindOneOptions = withPassword
-            ? {where: {telegramId}, select: ['username', 'password']}
-            : {where: {telegramId}};
+    public async getByTelegramId(telegramId: number): Promise<TUser | null> {
+        const searchOptions: FindOneOptions<UserEntity> = { where: { telegramId } };
 
         return await this.userRepository.findOne(searchOptions);
     }
@@ -181,8 +162,6 @@ export class UserService {
                 token,
                 telegramId: user.telegramId,
                 expiresIn: 86400,
-                ownedCups: user.ownedCups,
-                attendedCups: user.attendedCups,
             },
         };
     }

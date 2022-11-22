@@ -5,6 +5,7 @@ import {CupEntity} from './cup.entity';
 import {CreateCupDto} from "@webserver/cup/dto/createCup.dto";
 import {UserEntity} from '@webserver/user/user.entity';
 import {FindManyOptions} from "typeorm/find-options/FindManyOptions";
+import {TUser} from "@webserver/user/types/user.type";
 
 @Injectable()
 export class CupService {
@@ -49,7 +50,7 @@ export class CupService {
         return await this.cupRepository.find(searchOptions);
     }
 
-    public async create(user: UserEntity, createCupDto: CreateCupDto): Promise<CupEntity> {
+    public async create(user: TUser, createCupDto: CreateCupDto): Promise<CupEntity> {
         //TODO: keine sonderzeichen im namen, nur maximal 32 zeichen lang bitte
         const cupByName = await this.cupRepository.findOneBy({
             name: createCupDto.name,
@@ -66,7 +67,7 @@ export class CupService {
         const newCup = new CupEntity();
         Object.assign(newCup, createCupDto);
 
-        newCup.manager = user;
+        newCup.manager = user as UserEntity;
 
         if (createCupDto.startTimestamp === undefined) {
             newCup.startTimestamp = new Date;

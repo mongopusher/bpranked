@@ -1,4 +1,10 @@
 import {KeyboardButton, ReplyKeyboardMarkup} from "node-telegram-bot-api";
+import {CupEntity} from "@webserver/cup/cup.entity";
+import moment from "moment";
+
+
+export const DATE_FORMAT_DE = 'DD.MM.YYYY';
+export const DATE_FORMAT_EXTENDED_DE = 'DD.MM.YYYY HH:mm:ss';
 
 export class ChatUtils {
     public static getKeyboardMarkup(data: Array<any>, columns: number, shouldOnlySendOnce = true): ReplyKeyboardMarkup {
@@ -16,5 +22,15 @@ export class ChatUtils {
             keyboard: keyboard,
             one_time_keyboard: shouldOnlySendOnce,
         };
+    }
+
+    public static getFormattedCup(cup: CupEntity, elo?: number): string {
+        const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
+        const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
+
+        const responseLines = [`${startDate} - ${endDate}`];
+        responseLines.push(`<b>${cup.manager.username}</b>s ${cup.name} ${elo ?? ': ' + elo}`);
+
+        return responseLines.join('\n');
     }
 }
