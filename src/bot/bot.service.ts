@@ -325,10 +325,17 @@ export class BotService {
         const cups = await this.cupService.getAttendedCups(user);
 
         const textReply = cups.map((cup) => {
-            return [
-                `<b>${cup.manager.username}</b>s ${cup.name}:`,
-                `${moment(cup.startTimestamp).format(DATE_FORMAT_DE)} - ${moment(cup.startTimestamp).format(DATE_FORMAT_DE)}`
-            ].join('\n');
+            const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
+            const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
+
+            console.log(cup);
+
+            const userCupRelation = 'blackbox';
+
+            const responseLines = [`${startDate} - ${endDate}`];
+            responseLines.push(`<b>${cup.manager.username}</b>s ${cup.name}: ${userCupRelation}`)
+
+            return responseLines.join('\n');
         }).join('\n\n');
 
         const options: SendMessageOptions = {
