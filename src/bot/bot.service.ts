@@ -15,6 +15,8 @@ import moment from "moment";
 import {ChatUtils, DATE_FORMAT_DE, DATE_FORMAT_EXTENDED_DE} from "@webserver/bot/utils/chat.utils";
 import {TUser} from "@webserver/user/types/user.type";
 
+const DELETE_CONFIRM_STRING = 'lösch dich';
+
 @Injectable()
 export class BotService {
     private bot: TelegramBot;
@@ -84,7 +86,7 @@ export class BotService {
             case Command.JOIN_CUP:
                 return this.startJoinCup(msg, user);
             case Command.DELETE_CUP:
-                return this.deleteCup(msg, user);
+                return this.startDeleteCup(msg, user);
             case Command.GET_ALL_CUPS:
                 return this.getAllCups(msg);
             case Command.GET_JOINED_CUPS:
@@ -114,6 +116,10 @@ export class BotService {
                 return this.createCup(msg, userInput, user);
             case BotState.JOIN_CUP:
                 return this.joinCup(msg, userInput, user);
+            case BotState.DEL_CUP:
+                return this.confirmDeleteCup(msg, userInput, user);
+            case BotState.DEL_CUP_CONFIRM:
+                return this.deleteCup(msg, userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
         }
@@ -321,13 +327,38 @@ export class BotService {
         return await this.sendMessage(msg, textReply)
     }
 
-    private async deleteCup(msg: Message, user: TUser): Promise<Message> {
+    private async startDeleteCup(msg: Message, user: TUser): Promise<Message> {
         const userEntity = await this.userService.getById(user.id, false, true);
         const textReply = 'Welchen deiner Cups möchtest du löschen?';
         const keyBoardReply = userEntity.ownedCups.map((cup) => cup.name);
 
         await this.userService.updateBotstate(msg.from.id, BotState.DEL_CUP);
         return await this.sendMessageWithKeyboard(msg, textReply, keyBoardReply, 1);
+    }
+
+    private async confirmDeleteCup(msg: Message, input: string, user: TUser): Promise<Message> {
+        const { ownedCups } = await this.userService.getById(user.id, false, true);
+
+        if (ownedCups.find((cup) => cup.name === input) === undefined) {
+            return this.cancelBot(msg);
+        }
+
+        this.cachedUserInput.set(msg.from.id, [input]);
+        const textReply = `Möchtest du <b>${input}</b> wirklich löschne? Bitte gib zur Bestätigung <i>${DELETE_CONFIRM_STRING}</i> ein`;
+
+        await this.userService.updateBotstate(msg.from.id, BotState.DEL_CUP_CONFIRM);
+        return await this.sendMessage(msg, textReply);
+    }
+
+    private async deleteCup(msg: Message, input: string, user: TUser): Promise<Message> {
+        if (msg.text !== DELETE_CONFIRM_STRING) {
+            return this.cancelBot(msg);
+        }
+
+        const textReply = 'Dummy Text wenn der dingens gelöscht ist';
+
+        await this.userService.updateBotstate(msg.from.id, BotState.ON);
+        return await this.sendMessage(msg, textReply);
     }
 
     private sendMessage(msg: Message, text: string): Promise<Message> {
