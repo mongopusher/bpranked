@@ -80,4 +80,12 @@ export class CupService {
     public async update(cup: CupEntity): Promise<CupEntity> {
         return this.cupRepository.save(cup);
     }
+
+    public async deleteByName(name: string): Promise<void> {
+        const deleteResult = await this.cupRepository.delete({ name });
+
+        if (deleteResult.affected !== 1) {
+            throw new Error('Only 1 row should have been deleted');
+        }
+    }
 }

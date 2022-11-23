@@ -344,18 +344,21 @@ export class BotService {
         }
 
         this.cachedUserInput.set(msg.from.id, [input]);
-        const textReply = `Möchtest du <b>${input}</b> wirklich löschne? Bitte gib zur Bestätigung <i>${DELETE_CONFIRM_STRING}</i> ein`;
+        const textReply = `Möchtest du <b>${input}</b> wirklich löschne? Bitte gib zur Bestätigung <i>${DELETE_CONFIRM_STRING}</i> ein.`;
 
         await this.userService.updateBotstate(msg.from.id, BotState.DEL_CUP_CONFIRM);
         return await this.sendMessage(msg, textReply);
     }
 
-    private async deleteCup(msg: Message, input: string, user: TUser): Promise<Message> {
-        if (msg.text !== DELETE_CONFIRM_STRING) {
+    private async deleteCup(msg: Message, input: string): Promise<Message> {
+        if (input !== DELETE_CONFIRM_STRING) {
             return this.cancelBot(msg);
         }
 
-        const textReply = 'Dummy Text wenn der dingens gelöscht ist';
+        const cupToDelete = this.cachedUserInput.get(msg.from.id)[0];
+
+        await this.cupService.deleteByName(cupToDelete);
+        const textReply = `<i>${cupToDelete}</i> wurde gelöscht.`;
 
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
         return await this.sendMessage(msg, textReply);
