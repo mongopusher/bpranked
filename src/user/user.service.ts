@@ -135,9 +135,12 @@ export class UserService {
 
         const searchOptions: FindOneOptions<UserEntity> = { where: { id } };
 
-        // if (withRelations === true) {
-        //     searchOptions.relations = { attendedCups: true, ownedCups: true };
-        // }
+        if (withRelations === true) {
+            searchOptions.relations = {
+                attendedCups: true,
+                //ownedCups: true
+            };
+        }
 
         if (withPassword === true) {
             searchOptions.select = ['username', 'password'];
