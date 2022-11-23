@@ -316,9 +316,11 @@ export class BotService {
     }
 
     private async getJoinedCups(msg: Message, user: TUser): Promise<Message> {
-        const { attendedCups } = await this.userService.getById(user.id, false, true);
+        const userEntity = await this.userService.getById(user.id, false, true);
 
-        const textReply = attendedCups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n')
+        console.log(userEntity);
+
+        const textReply = 'cok';// userEntity.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n')
 
         return this.sendMessage(msg, textReply)
     }
