@@ -27,9 +27,10 @@ export class ChatUtils {
     public static getFormattedCup(cup: CupEntity, elo?: number): string {
         const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
         const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
+        const username = cup.manager?.username !== undefined ? `<b>${cup.manager.username}</b>s ` : '';
 
         const responseLines = [`${startDate} - ${endDate}`];
-        responseLines.push(`<b>${cup.manager.username}</b>s ${cup.name} ${elo ?? ': ' + elo}`);
+        responseLines.push(`${username}${cup.name} ${elo ?? ': ' + elo}`);
 
         return responseLines.join('\n');
     }

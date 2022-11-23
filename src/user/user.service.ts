@@ -135,15 +135,15 @@ export class UserService {
 
         const searchOptions: FindOneOptions<UserEntity> = { where: { id } };
 
+        if (withPassword === true) {
+            searchOptions.select = ['username', 'password'];
+        }
+
         if (withRelations === true) {
             searchOptions.relations = {
                 attendedCups: true,
                 ownedCups: true,
             };
-        }
-
-        if (withPassword === true) {
-            searchOptions.select = ['username', 'password'];
         }
 
          return await this.userRepository.findOne(searchOptions);

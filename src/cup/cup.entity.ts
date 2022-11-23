@@ -10,11 +10,11 @@ export class CupEntity {
     name: string;
 
     @ManyToOne(() => UserEntity, (user) => user.ownedCups)
-    manager: UserEntity;
+    manager: UserEntity | undefined;
 
     @ManyToMany(() => UserEntity, (user) => user.attendedCups)
     @JoinTable()
-    attendees: Array<UserEntity>;
+    attendees: Array<UserEntity> | undefined;
 
     @Column()
     startTimestamp: Date;
