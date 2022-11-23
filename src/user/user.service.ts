@@ -135,9 +135,9 @@ export class UserService {
 
         const searchOptions: FindOneOptions<UserEntity> = { where: { id } };
 
-        if (withRelations === true) {
-            searchOptions.relations = { attendedCups: true, ownedCups: true };
-        }
+        // if (withRelations === true) {
+        //     searchOptions.relations = { attendedCups: true, ownedCups: true };
+        // }
 
         if (withPassword === true) {
             searchOptions.select = ['username', 'password'];
@@ -146,16 +146,16 @@ export class UserService {
         // console.log(searchOptions);
 
         // BOTH DOES NOT WORK YET....
-        const sql = this.userRepository.createQueryBuilder('user')
-            .leftJoinAndSelect('user.attendedCups', 'cups')
-            .where({ id })
-            .getSql();
+        // const sql = this.userRepository.createQueryBuilder('user')
+        //     .leftJoinAndSelect('user.attendedCups', 'cups')
+        //     .where({ id })
+        //     .getSql();
+        //
+        // console.log(sql);
+        //
+        // return await this.userRepository.query(sql);
 
-        console.log(sql);
-
-        return await this.userRepository.query(sql);
-
-        // return await this.userRepository.findOne(searchOptions);
+        return await this.userRepository.findOne(searchOptions);
     }
 
     public async getByTelegramId(telegramId: number): Promise<TUser | null> {
