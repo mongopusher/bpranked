@@ -276,13 +276,9 @@ export class BotService {
 
         const keyBoardData = filteredCups.map((cup) => cup.name);
 
-        const options: SendMessageOptions = {
-            reply_markup: ChatUtils.getKeyboardMarkup(keyBoardData, 1),
-            parse_mode: 'HTML',
-        };
-
         await this.userService.updateBotstate(msg.from.id, BotState.JOIN_CUP);
-        return await this.bot.sendMessage(msg.chat.id, responseText, options);
+
+        return await this.sendMessageWithKeyboard(msg, responseText, keyBoardData, 1);
     }
 
     private async joinCup(msg: Message, userInput: string, user: TUser): Promise<Message> {
@@ -314,7 +310,7 @@ export class BotService {
         const cups = await this.cupService.getAllWithRelations();
 
         const textReply = cups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
-        return this.sendMessage(msg, textReply)
+        return await this.sendMessage(msg, textReply)
     }
 
     private async getJoinedCups(msg: Message, user: TUser): Promise<Message> {
@@ -322,13 +318,16 @@ export class BotService {
 
         const textReply = userEntity.attendedCups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
 
-        return this.sendMessage(msg, textReply)
+        return await this.sendMessage(msg, textReply)
     }
 
     private async deleteCup(msg: Message, user: TUser): Promise<Message> {
-        const textReply = ChatUtils.createTable([8], ['fritz', 'bob', 'alex', 420]);
+        const userEntity = await this.userService.getById(user.id, false, true);
+        const textReply = 'Welchen deiner Cups möchtest du löschen?';
+        const keyBoardReply = userEntity.ownedCups.map((cup) => cup.name);
 
-        return this.sendMessage(msg, textReply)
+        await this.userService.updateBotstate(msg.from.id, BotState.DEL_CUP);
+        return await this.sendMessageWithKeyboard(msg, textReply, keyBoardReply, 1);
     }
 
     private sendMessage(msg: Message, text: string): Promise<Message> {
@@ -336,6 +335,15 @@ export class BotService {
             reply_markup: {
                 remove_keyboard: true,
             },
+            parse_mode: 'HTML',
+        };
+
+        return this.bot.sendMessage(msg.chat.id, text, options)
+    };
+
+    private sendMessageWithKeyboard(msg: Message, text: string, keyBoardData: Array<any>, columns: number): Promise<Message> {
+        const options: SendMessageOptions = {
+            reply_markup: ChatUtils.getKeyboardMarkup(keyBoardData, columns),
             parse_mode: 'HTML',
         };
 

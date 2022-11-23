@@ -8,10 +8,16 @@ export enum BotState {
 
     // joincup
     JOIN_CUP = 30,
+
+    // delcup
+    DEL_CUP = 40,
+    DEL_CUP_CONFIRM = 41,
 }
 
 export const acceptTextBotStates = [
     BotState.START_NEW_CUP,
     BotState.NEW_CUP_NAME_SET,
     BotState.JOIN_CUP,
+    BotState.DEL_CUP,
+    BotState.DEL_CUP_CONFIRM,
 ]
