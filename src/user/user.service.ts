@@ -143,10 +143,19 @@ export class UserService {
             searchOptions.select = ['username', 'password'];
         }
 
-        console.log(searchOptions);
-        return this.userRepository.createQueryBuilder('user').leftJoinAndSelect('user.attendedCups', 'cups').getOne();
+        // console.log(searchOptions);
 
-        return await this.userRepository.findOne(searchOptions);
+        // BOTH DOES NOT WORK YET....
+        const sql = this.userRepository.createQueryBuilder('user')
+            .leftJoinAndSelect('user.attendedCups', 'cups')
+            .where({ id })
+            .getSql();
+
+        console.log(sql);
+
+        return await this.userRepository.query(sql);
+
+        // return await this.userRepository.findOne(searchOptions);
     }
 
     public async getByTelegramId(telegramId: number): Promise<TUser | null> {
