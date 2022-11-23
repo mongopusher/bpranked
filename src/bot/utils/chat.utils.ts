@@ -28,9 +28,10 @@ export class ChatUtils {
         const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
         const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
         const username = cup.manager?.username !== undefined ? `<b>${cup.manager.username}</b>s ` : '';
+        const eloDisplay = elo !== undefined ? `<b>${elo}</b>` : `<i>unranked</i>`
 
         const responseLines = [`${startDate} - ${endDate}`];
-        responseLines.push(`${username}${cup.name} ${elo ?? ': ' + elo}`);
+        responseLines.push(`${username}${cup.name}${eloDisplay}`);
 
         return responseLines.join('\n');
     }
