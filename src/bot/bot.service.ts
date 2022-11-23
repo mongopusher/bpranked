@@ -83,6 +83,8 @@ export class BotService {
                 return this.cancelBot(msg);
             case Command.JOIN_CUP:
                 return this.startJoinCup(msg, user);
+            case Command.DELETE_CUP:
+                return this.deleteCup(msg, user);
             case Command.GET_ALL_CUPS:
                 return this.getAllCups(msg);
             case Command.GET_JOINED_CUPS:
@@ -319,6 +321,12 @@ export class BotService {
         const userEntity = await this.userService.getById(user.id, false, true);
 
         const textReply = userEntity.attendedCups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
+
+        return this.sendMessage(msg, textReply)
+    }
+
+    private async deleteCup(msg: Message, user: TUser): Promise<Message> {
+        const textReply = ChatUtils.createTable([8], ['fritz', 'bob', 'alex', 420]);
 
         return this.sendMessage(msg, textReply)
     }

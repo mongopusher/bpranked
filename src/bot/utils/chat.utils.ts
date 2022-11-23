@@ -31,8 +31,22 @@ export class ChatUtils {
         const eloDisplay = elo !== undefined ? `<b>${elo}</b>` : `<i>unranked</i>`
 
         const responseLines = [`${startDate} - ${endDate}`];
-        responseLines.push(`${username}${cup.name}${eloDisplay}`);
+        responseLines.push(`${username}${cup.name}: ${eloDisplay}`);
 
         return responseLines.join('\n');
+    }
+
+
+    public static createTable(columnLengths: Array<number>, inputArray: Array<any>): string {
+        let tableArray = inputArray.map((dataEntry: any) => {
+            if (dataEntry.toString().length > columnLengths[0]) {
+                throw new Error('string length bigger than column length');
+            }
+            const whiteSpacesCount = columnLengths[0] - dataEntry.toString().length;
+
+            return `|${dataEntry}${' '.repeat(whiteSpacesCount)}|`;
+        });
+
+        return `<code>${tableArray.join('\n')}</code>`
     }
 }
