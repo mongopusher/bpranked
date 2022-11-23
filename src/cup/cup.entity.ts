@@ -12,7 +12,7 @@ export class CupEntity {
     @ManyToOne(() => UserEntity, (user) => user.ownedCups)
     manager: UserEntity;
 
-    @ManyToMany(() => UserEntity, (user) => user.ownedCups)
+    @ManyToMany(() => UserEntity, (user) => user.attendedCups)
     @JoinTable()
     attendees: Array<UserEntity>;
 
