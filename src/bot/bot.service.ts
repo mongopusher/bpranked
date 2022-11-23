@@ -119,7 +119,7 @@ export class BotService {
             case BotState.DEL_CUP:
                 return this.confirmDeleteCup(msg, userInput, user);
             case BotState.DEL_CUP_CONFIRM:
-                return this.deleteCup(msg, userInput, user);
+                return this.deleteCup(msg, userInput);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
         }
