@@ -138,7 +138,7 @@ export class UserService {
         if (withRelations === true) {
             searchOptions.relations = {
                 attendedCups: true,
-                //ownedCups: true
+                ownedCups: true,
             };
         }
 
@@ -146,17 +146,7 @@ export class UserService {
             searchOptions.select = ['username', 'password'];
         }
 
-
-        const sql = this.userRepository.createQueryBuilder('user')
-            .leftJoinAndSelect('user.attendedCups', 'cups')
-            // .where('user.id = :id', {id})
-            .getSql();
-
-        console.log(sql);
-
-        return await this.userRepository.query(sql);
-
-        // return await this.userRepository.findOne(searchOptions);
+         return await this.userRepository.findOne(searchOptions);
     }
 
     public async getByTelegramId(telegramId: number): Promise<TUser | null> {

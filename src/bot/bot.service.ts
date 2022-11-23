@@ -320,7 +320,7 @@ export class BotService {
 
         console.log(userEntity);
 
-        const textReply = 'cok';// userEntity.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n')
+        const textReply = userEntity.attendedCups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
 
         return this.sendMessage(msg, textReply)
     }
