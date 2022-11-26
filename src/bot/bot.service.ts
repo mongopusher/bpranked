@@ -202,8 +202,12 @@ export class BotService {
 
     private sendHelp(chatId: number): Promise<Message> {
         const textReply = Object.values(Command).map((commandName) => {
-           return '/' + commandName + ' - ' + helpMessage[commandName]
-        }).join('\n');
+            if(helpMessage[commandName] === undefined) {
+                return undefined;
+            }
+
+           return `/${commandName} - ${helpMessage[commandName]}`;
+        }).filter(value => value !== undefined).join('\n');
 
         return this.bot.sendMessage(chatId, textReply);
     }
