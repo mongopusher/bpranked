@@ -456,7 +456,9 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.UNAVAILABLE_PLAYER)
         }
 
-        this.setCachedUserInput(msg, CacheRoute.newgame, cachedUserInput.winners.concat(userInput));
+        const winners = cachedUserInput?.winners || [];
+
+        this.setCachedUserInput(msg, CacheRoute.newgame, winners.concat(userInput));
         return this.askForPlayer(msg, 'Gewinner');
     }
 
@@ -474,7 +476,10 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.UNAVAILABLE_PLAYER)
         }
 
-        this.setCachedUserInput(msg, CacheRoute.newgame, cachedUserInput.losers.concat(userInput));
+        const losers = cachedUserInput?.losers || [];
+
+
+        this.setCachedUserInput(msg, CacheRoute.newgame, losers.concat(userInput));
         return await this.askForPlayer(msg, 'Verlierer');
     }
 
