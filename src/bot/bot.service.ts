@@ -413,7 +413,7 @@ export class BotService {
 
         if (attendedCups.length === 1) {
             await this.chooseCupForGame(msg, attendedCups[0].name);
-            await this.askForPlayer(msg, 'Gewinner');
+            return this.askForPlayer(msg, 'Gewinner');
         }
 
         const cups = attendedCups.map((cup) => cup.name);
