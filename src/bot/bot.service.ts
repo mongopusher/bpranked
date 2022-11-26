@@ -1,6 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import TelegramBot, {Message, SendMessageOptions} from "node-telegram-bot-api";
-import {Command} from "@webserver/bot/commands.constant";
+import {Command} from "@webserver/bot/commands/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/utils/message.utils";
 import {UserService} from "@webserver/user/user.service";
@@ -14,6 +14,7 @@ import {ChatError} from "@webserver/bot/error/chat-error";
 import moment from "moment";
 import {ChatUtils, DATE_FORMAT_DE, DATE_FORMAT_EXTENDED_DE} from "@webserver/bot/utils/chat.utils";
 import {TUser} from "@webserver/user/types/user.type";
+import {helpMessage} from "@webserver/bot/commands/help-message.constant";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -200,12 +201,11 @@ export class BotService {
     }
 
     private sendHelp(chatId: number): Promise<Message> {
-        return this.bot.sendMessage(chatId,
-            '/help - zeige alle erlaubten Befehle\n' +
-            '/start - startet den Bot\n' +
-            '/stop - stoppt den Bot\n' +
-            '/newcup - erstelle einen neuen Cup'
-        );
+        const textReply = Object.values(Command).map((commandName) => {
+           return '/' + commandName + ' - ' + helpMessage[commandName]
+        }).join('\n');
+
+        return this.bot.sendMessage(chatId, textReply);
     }
 
     private async startNewCup(msg: Message): Promise<Message> {
