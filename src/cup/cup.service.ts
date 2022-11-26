@@ -81,6 +81,10 @@ export class CupService {
         return this.cupRepository.save(cup);
     }
 
+    public async getByName(name: string): Promise<CupEntity> {
+        return await this.cupRepository.findOne({ where: { name }, relations: { attendees: true } });
+    }
+
     public async deleteByName(name: string): Promise<void> {
         const deleteResult = await this.cupRepository.delete({ name });
 
