@@ -7,13 +7,15 @@ import ormconfig from '@webserver/ormconfig';
 import {AuthMiddleware} from '@webserver/user/middlewares/auth.middleware';
 import {BotModule} from "@webserver/bot/bot.module";
 import {CupModule} from "@webserver/cup/cup.module";
+import {GameModule} from "@webserver/game/game.module";
 
 @Module({
     imports: [
         TypeOrmModule.forRoot(ormconfig),
         UserModule,
         BotModule,
-        CupModule
+        CupModule,
+        GameModule
     ],
     controllers: [AppController],
     providers: [AppService],

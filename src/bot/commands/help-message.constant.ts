@@ -7,7 +7,8 @@ export const helpMessage = {
     [Command.GET_JOINED_CUPS]: 'zeigt dir Cups an, an denen du teilnimmst und die du erstellt hast',
     [Command.NEW_CUP]: 'erstelle einen neuen Cup',
     [Command.JOIN_CUP]: 'nimm an einem Cup teil',
-    [Command.CANCEL]: 'bringt den aktuellen Vorgang ab',
+    [Command.CANCEL]: 'bricht den aktuellen Vorgang ab',
     [Command.DELETE_CUP]: 'lösche einen deiner Cups',
-    [Command.GET_ALL_CUPS]: 'zeigt dir alle Cups an'
+    [Command.GET_ALL_CUPS]: 'zeigt dir alle Cups an',
+    [Command.NEW_GAME]: 'trage ein neues Spiel ein',
 }

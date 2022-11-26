@@ -2,8 +2,9 @@ import {BeforeInsert, BeforeUpdate, Column, Entity, ManyToMany, OneToMany, Prima
 import {hash} from 'bcrypt';
 import {BotState} from "@webserver/bot/bot-state.constant";
 import {CupEntity} from "@webserver/cup/cup.entity";
+import {GameEntity} from '@webserver/game/game.entity';
 
-@Entity({name: 'users'})
+@Entity({ name: 'users' })
 export class UserEntity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -23,6 +24,9 @@ export class UserEntity {
     @Column()
     botState: BotState;
 
+    @Column()
+    elo: number;
+
     @BeforeInsert()
     @BeforeUpdate()
     async hashPassword() {
@@ -36,4 +40,10 @@ export class UserEntity {
 
     @ManyToMany(() => CupEntity, (cup) => cup.attendees)
     attendedCups: Array<CupEntity>;
+
+    @ManyToMany(() => GameEntity, (game) => game.winners)
+    gamesWon: Array<GameEntity>;
+
+    @ManyToMany(() => GameEntity, (game) => game.losers)
+    gamesLost: Array<GameEntity>;
 }

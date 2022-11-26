@@ -114,10 +114,7 @@ export class UserService {
 
 
         Object.assign(user, { username });
-        const updateResult = await this.userRepository.update(
-            { id },
-            { username },
-        );
+        const updateResult = await this.userRepository.update({ id }, { username },);
         if (updateResult.affected !== 1) {
             console.error(
                 'Always should be 1 row on updateUser! Actual affected: ',
@@ -146,7 +143,7 @@ export class UserService {
             };
         }
 
-         return await this.userRepository.findOne(searchOptions);
+        return await this.userRepository.findOne(searchOptions);
     }
 
     public async getByTelegramId(telegramId: number): Promise<TUser | null> {
@@ -165,6 +162,7 @@ export class UserService {
                 token,
                 telegramId: user.telegramId,
                 expiresIn: 86400,
+                elo: user.elo,
             },
         };
     }

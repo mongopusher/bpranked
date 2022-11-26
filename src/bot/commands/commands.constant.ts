@@ -8,5 +8,8 @@ export enum Command {
     JOIN_CUP = 'joincup',
     GET_JOINED_CUPS = 'mycups',
     GET_ALL_CUPS = 'getcups',
+    GET_ALL_GAMES = 'getgames',
+    GET_MY_GAMES = 'mygames',
+    NEW_GAME = 'newgame',
     METADATA = 'metadata',
 }

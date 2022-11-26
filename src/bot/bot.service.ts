@@ -15,6 +15,9 @@ import moment from "moment";
 import {ChatUtils, DATE_FORMAT_DE, DATE_FORMAT_EXTENDED_DE} from "@webserver/bot/utils/chat.utils";
 import {TUser} from "@webserver/user/types/user.type";
 import {helpMessage} from "@webserver/bot/commands/help-message.constant";
+import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
+import {GameEntity} from "@webserver/game/game.entity";
+import {GameService} from "@webserver/game/game.service";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -24,7 +27,8 @@ export class BotService {
     private cachedUserInput: Map<number, Array<string>>;
 
     public constructor(@Inject(UserService) private readonly userService: UserService,
-                       @Inject(CupService) private readonly cupService: CupService) {
+                       @Inject(CupService) private readonly cupService: CupService,
+                       @Inject(GameService) private readonly gameService: GameService) {
         this.cachedUserInput = new Map<number, Array<string>>();
     }
 
@@ -92,6 +96,12 @@ export class BotService {
                 return this.getAllCups(msg);
             case Command.GET_JOINED_CUPS:
                 return this.getJoinedCups(msg, user);
+            case Command.GET_MY_GAMES:
+                return this.getMyGames(msg, user);
+            case Command.GET_ALL_GAMES:
+                return this.getAllGames(msg);
+            case Command.NEW_GAME:
+                return this.startNewGame(msg, user);
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -202,11 +212,11 @@ export class BotService {
 
     private sendHelp(chatId: number): Promise<Message> {
         const textReply = Object.values(Command).map((commandName) => {
-            if(helpMessage[commandName] === undefined) {
+            if (helpMessage[commandName] === undefined) {
                 return undefined;
             }
 
-           return `/${commandName} - ${helpMessage[commandName]}`;
+            return `/${commandName} - ${helpMessage[commandName]}`;
         }).filter(value => value !== undefined).join('\n');
 
         return this.bot.sendMessage(chatId, textReply);
@@ -366,6 +376,42 @@ export class BotService {
 
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
         return await this.sendMessage(msg, textReply);
+    }
+
+    public async startNewGame(msg: Message, user: TUser): Promise<Message> {
+
+        // cups holen
+
+        // if(nur 1 cup existiert für user -> überspringen)
+
+        // bot state anpassen
+
+        return this.sendMessage(msg, 'Please select the cup of the game');
+    }
+
+    public async createGame(createGameDto: CreateGameDto, user: UserEntity): Promise<Message> {
+        console.log({ createGameDto, user });
+
+
+        return '' as any;
+    }
+
+    public async getMyGames(msg: Message, user: TUser): Promise<Message> {
+        const userWithRelations = await this.userService.getById(user.id, false, true);
+        console.log(userWithRelations);
+
+        const game = await this.gameService.getGameById(userWithRelations.id);
+        console.log({ game });
+
+        return this.sendMessage(msg, JSON.stringify(game));
+    }
+
+    public async getAllGames(msg: Message): Promise<Message> {
+        const allGames = await this.gameService.getAllGames();
+
+        console.log({ allGames });
+
+        return this.sendMessage(msg, JSON.stringify(allGames));
     }
 
     private sendMessage(msg: Message, text: string): Promise<Message> {
