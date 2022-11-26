@@ -28,4 +28,6 @@ export const acceptTextBotStates = [
     BotState.DEL_CUP,
     BotState.DEL_CUP_CONFIRM,
     BotState.START_NEW_GAME,
+    BotState.NEW_GAME_CUP_SET,
+    BotState.NEW_GAME_WINNERS_SET,
 ]
