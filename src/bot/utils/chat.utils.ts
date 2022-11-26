@@ -13,7 +13,9 @@ export class ChatUtils {
         for (let i = 0; i < data.length; i++) {
             const column = [];
             for (let j = 0; j < columns; j++) {
-                column.push(data[i * columns + j]);
+                if (data[i * columns + j] !== undefined) {
+                    column.push(data[i * columns + j]);
+                }
             }
             keyboard.push(column);
         }
