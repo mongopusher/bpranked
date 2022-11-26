@@ -192,7 +192,7 @@ export class BotService {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         if (user.botState === BotState.ON) {
-            return this.bot.sendMessage(msg.chat.id, 'Mir doch egal, hab grad eh nichts gemacht...');
+            return this.bot.sendMessage(msg.chat.id, infoText ?? 'Mir doch egal, hab grad eh nichts gemacht...');
         }
 
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
