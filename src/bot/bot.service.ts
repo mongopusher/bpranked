@@ -429,10 +429,11 @@ export class BotService {
 
     public async askForPlayer(msg, playerLabel: 'Gewinner' | 'Verlierer'): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
+        const winners = cachedUserInput?.winners || [];
 
         const { attendees } = await this.cupService.getByName(cachedUserInput.name);
 
-        const usedPlayers = cachedUserInput.winners.concat(cachedUserInput.losers);
+        const usedPlayers = winners.concat(cachedUserInput.losers);
         const availablePlayers = attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) !== false)
 
