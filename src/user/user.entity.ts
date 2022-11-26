@@ -24,8 +24,8 @@ export class UserEntity {
     @Column()
     botState: BotState;
 
-    @Column()
-    elo: number;
+    @Column({ nullable: true })
+    elo: number | undefined;
 
     @BeforeInsert()
     @BeforeUpdate()
