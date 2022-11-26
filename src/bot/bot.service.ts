@@ -188,11 +188,11 @@ export class BotService {
         return this.bot.sendMessage(msg.chat.id, getFarewell(name));
     }
 
-    private async cancelBot(msg: Message, infoText = ''): Promise<Message> {
+    private async cancelBot(msg: Message, infoText?: string | undefined): Promise<Message> {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         if (user.botState === BotState.ON) {
-            return this.bot.sendMessage(msg.chat.id, infoText || 'Mir doch egal, hab grad eh nichts gemacht...');
+            return this.bot.sendMessage(msg.chat.id, infoText ?? 'Mir doch egal, hab grad eh nichts gemacht...');
         }
 
         await this.userService.updateBotstate(msg.from.id, BotState.ON);
