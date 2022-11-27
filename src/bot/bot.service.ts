@@ -442,6 +442,8 @@ export class BotService {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
         const winners = cachedUserInput?.winners || [];
 
+        console.log('askforPlayer', { cachedUserInput });
+
         const { attendees } = await this.cupService.getByName(cachedUserInput.name);
 
         if (attendees.length < 2) {
@@ -452,7 +454,7 @@ export class BotService {
         const availablePlayers = attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) === false)
 
-        availablePlayers.unshift('ENDE');
+        availablePlayers.push('ENDE');
         return this.sendMessageWithKeyboard(msg, `Bitte wähle die ${playerLabel} des Spiels`, availablePlayers, 2);
     }
 
