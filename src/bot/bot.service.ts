@@ -239,7 +239,7 @@ export class BotService {
         }
 
         await this.updateBotState(msg, BotState.ON);
-        await this.sendMessage(msg, 'Aktueller Vorgang wurde abgebrochen!');
+        await this.sendMessage(msg, infoText ?? 'Aktueller Vorgang wurde abgebrochen!');
     }
 
     private sendHelp(chatId: number): Promise<Message> {
@@ -461,7 +461,7 @@ export class BotService {
 
         if (userInput === 'ENDE') {
             await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
-            await this.askForPlayer(msg, 'Verlierer');
+            return await this.askForPlayer(msg, 'Verlierer');
         }
 
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
@@ -496,9 +496,9 @@ export class BotService {
 
     public async confirmCreateGame(msg: Message, { winners, losers }: TNewGameCache): Promise<Message> {
         const textReply = [
-            `<i>${winners.join(', ')}</i> (Gewinner)`,
-            `<b>VS</b>`,
-            `<i>${losers.join(', ')}</i> (Verlierer)`,
+            `<b>${winners.join(', ')}</b> (Gewinner)`,
+            `vs`,
+            `<b>${losers.join(', ')}</b> (Verlierer)`,
             'Schwörst du bei den Bierponggöttern, dass deine Angaben wahrheitsgemäß sind?',
         ].join('\n')
 
@@ -519,7 +519,6 @@ export class BotService {
 
             const createGameDto = new CreateGameDto(cup, winners, losers)
             await this.gameService.createGame(createGameDto);
-
 
             // send broadcast to every mensch
             this.cachedUserInput.delete(msg.from.id);
