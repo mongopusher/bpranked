@@ -1,6 +1,6 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {UserEntity} from '@webserver/user/user.entity';
-import {FindOneOptions, Not, Repository} from 'typeorm';
+import {FindOneOptions, In, Not, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {CreateUserDto} from '@webserver/user/dto/createUser.dto';
 import {sign} from 'jsonwebtoken';
@@ -11,6 +11,8 @@ import {UpdateUserDto} from '@webserver/user/dto/updateUser.dto';
 import * as fs from 'fs';
 import {BotState} from "@webserver/bot/bot-state.constant";
 import {TUser} from "@webserver/user/types/user.type";
+import {FindManyOptions} from "typeorm/find-options/FindManyOptions";
+import {FindOptionsWhere} from "typeorm/find-options/FindOptionsWhere";
 
 @Injectable()
 export class UserService {
@@ -148,6 +150,14 @@ export class UserService {
         }
 
         return await this.userRepository.findOne(searchOptions);
+    }
+
+    public async getMultipleByName(names: Array<string>): Promise<Array<UserEntity>> {
+        const searchOptions: FindOptionsWhere<UserEntity> = {
+                username: In(names),
+        };
+
+        return await this.userRepository.findBy(searchOptions);
     }
 
     public async getByTelegramId(telegramId: number): Promise<TUser | null> {

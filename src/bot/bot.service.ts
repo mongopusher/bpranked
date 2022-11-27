@@ -15,8 +15,8 @@ import moment from "moment";
 import {ChatUtils, DATE_FORMAT_DE, DATE_FORMAT_EXTENDED_DE} from "@webserver/bot/utils/chat.utils";
 import {TUser} from "@webserver/user/types/user.type";
 import {helpMessage} from "@webserver/bot/commands/help-message.constant";
-import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
 import {GameService} from "@webserver/game/game.service";
+import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -155,6 +155,8 @@ export class BotService {
                 return this.addWinner(msg, userInput);
             case BotState.NEW_GAME_WINNERS_SET:
                 return this.addLoser(msg, userInput);
+            case BotState.NEW_GAME_CONFIRM:
+                return this.createGame(msg, userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
         }
@@ -428,7 +430,7 @@ export class BotService {
         //check for valid data
         const cup = await this.cupService.getByName(cupName);
 
-        if(cup.attendees.some((attendee) => attendee.username === user.username) === false) {
+        if (cup.attendees.some((attendee) => attendee.username === user.username) === false) {
             return this.sendMessage(msg, 'Du kannst nur Spiele für Cups erstellen an denen du teilnimmst!', false);
         }
 
@@ -456,7 +458,6 @@ export class BotService {
 
     public async addWinner(msg: Message, userInput: string): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
-        console.log({ cachedUserInput });
 
         if (userInput === 'ENDE') {
             await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
@@ -468,7 +469,6 @@ export class BotService {
         }
 
         const winners = cachedUserInput?.winners || [];
-        console.log({ winners });
 
         this.addCachedUserInput(msg, CacheRoute.newgame, { winners: winners.concat(userInput) });
         return this.askForPlayer(msg, 'Gewinner');
@@ -479,35 +479,65 @@ export class BotService {
 
         if (userInput === 'ENDE') {
             // SPIEL SPEICHERN oder NACHRICHT ZUM SPEICHERN ANZEIGEN
-            await this.updateBotState(msg, BotState.ON);
-            console.log(this.cachedUserInput);
-            this.cachedUserInput.delete(msg.from.id);
-            return this.sendMessage(msg, 'Spiel eingetragen');
+            await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
+            return await this.confirmCreateGame(msg, cachedUserInput);
         }
 
-        // write own function for checking for undefined undso
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
             return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
         }
 
         const losers = cachedUserInput?.losers || [];
-        console.log({ losers });
 
-        this.addCachedUserInput(msg, CacheRoute.newgame, losers.concat(userInput));
+        this.addCachedUserInput(msg, CacheRoute.newgame, { losers: losers.concat(userInput) });
         return await this.askForPlayer(msg, 'Verlierer');
     }
 
 
-    public async createGame(createGameDto: CreateGameDto, user: UserEntity): Promise<Message> {
-        console.log({ createGameDto, user });
+    public async confirmCreateGame(msg: Message, { winners, losers }: TNewGameCache): Promise<Message> {
+        const textReply = [
+            `<i>${winners.join(', ')}</i> (Gewinner)`,
+            `<b>VS</b>`,
+            `<i>${losers.join(', ')}</i> (Verlierer)`,
+            'Schwörst du bei den Bierponggöttern, dass deine Angaben wahrheitsgemäß sind?',
+        ].join('\n')
+
+        await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
+        return this.sendMessageWithKeyboard(msg, textReply, ['JA', 'NEIN'], 2);
+    }
 
 
-        return '' as any;
+    public async createGame(msg: Message, confirmResponse: string, user: TUser): Promise<Message> {
+        if (confirmResponse === 'JA') {
+            const createGameData = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
+            // todo: maybe add cache for remebering the cup? another botstate
+
+            const cup = await this.cupService.getByName(createGameData.name);
+            const winners = await this.userService.getMultipleByName(createGameData.winners);
+            const losers = await this.userService.getMultipleByName(createGameData.losers);
+
+
+            const createGameDto = new CreateGameDto(cup, winners, losers)
+            await this.gameService.createGame(createGameDto);
+
+
+            // send broadcast to every mensch
+            this.cachedUserInput.delete(msg.from.id);
+            await this.updateBotState(msg, BotState.ON);
+            return this.sendMessage(msg, 'Spiel eingetragen.');
+        }
+
+        if (confirmResponse === 'NEIN') {
+            this.cachedUserInput.delete(msg.from.id);
+            return this.cancelBot(msg, 'Eintragen des Spiels abgebrochen.');
+        }
+
+        const textReply = 'Ich habe dich nicht verstanden, bitte antworte laut mit <b>JA</b> oder <b>NEIN</b>';
+        return this.sendMessage(msg, textReply, false);
     }
 
     public async getMyGames(msg: Message, user: TUser): Promise<Message> {
         const userWithRelations = await this.userService.getById(user.id, false, true);
-        console.log(userWithRelations);
 
         const game = await this.gameService.getGameById(userWithRelations.id);
         console.log({ game });
