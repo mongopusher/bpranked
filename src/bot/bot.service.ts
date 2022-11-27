@@ -450,11 +450,6 @@ export class BotService {
         const availablePlayers = attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) === false)
 
-        console.log({ usedPlayers });
-        console.log({ cachedUserInput });
-        console.log({ attendees });
-        console.log({ availablePlayers });
-
         availablePlayers.unshift('ENDE');
         return this.sendMessageWithKeyboard(msg, `Bitte wähle die ${playerLabel} des Spiels`, availablePlayers, 2);
     }
@@ -533,6 +528,7 @@ export class BotService {
 
     private addCachedUserInput(msg: Message, cacheRoute: CacheRoute, input: any): void {
         const cachedUserInput = this.cachedUserInput.get(msg.from.id);
+        console.log('')
 
         if (cachedUserInput.route !== cacheRoute) {
             throw new ChatError(ChatErrorMessage.CACHE_INVALID_FORMAT);
@@ -545,6 +541,7 @@ export class BotService {
 
         if (cachedUserInput?.data instanceof Object) {
             this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: { ...cachedUserInput.data, ...input } })
+            return;
         }
 
         this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: input })
