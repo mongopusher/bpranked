@@ -489,14 +489,12 @@ export class BotService {
     public async addLoser(msg: Message, userInput: string): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
 
-        console.log({cachedUserInput});
-
         const cup = await this.cupService.getByName(cachedUserInput.cupName);
 
         if (userInput === 'ENDE') {
             // SPIEL SPEICHERN oder NACHRICHT ZUM SPEICHERN ANZEIGEN
             await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
-            return await this.confirmCreateGame(msg, cachedUserInput);
+            return await this.confirmCreateGame(msg);
         }
 
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
@@ -512,14 +510,16 @@ export class BotService {
 
         if (availablePlayers.length === 0) {
             await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
-            return await this.confirmCreateGame(msg, cachedUserInput);
+            return await this.confirmCreateGame(msg);
         }
 
         return await this.askForPlayer(msg, 'Verlierer', cup);
     }
 
 
-    public async confirmCreateGame(msg: Message, { winners, losers }: TNewGameCache): Promise<Message> {
+    public async confirmCreateGame(msg: Message): Promise<Message> {
+        const { winners, losers } = this.getCachedUserInput(msg, CacheRoute.newgame);
+
         const textReply = [
             `<b>${winners.join(', ')}</b> (Gewinner)`,
             `vs`,
