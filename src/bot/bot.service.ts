@@ -490,6 +490,8 @@ export class BotService {
     public async addLoser(msg: Message, userInput: string): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
 
+        console.log({cachedUserInput});
+
         const cup = await this.cupService.getByName(cachedUserInput.cupName);
 
         if (userInput === 'ENDE') {
@@ -505,7 +507,7 @@ export class BotService {
         const losers = (cachedUserInput?.losers || []).concat(userInput);
         this.addCachedUserInput(msg, CacheRoute.newgame, { losers });
 
-        const usedPlayers = cachedUserInput?.winners.concat(losers);
+        const usedPlayers = cachedUserInput.winners?.concat(losers);
         const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) === false)
 
