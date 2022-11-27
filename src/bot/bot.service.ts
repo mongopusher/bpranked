@@ -458,8 +458,8 @@ export class BotService {
             await this.askForPlayer(msg, 'Verlierer');
         }
 
-        if (cachedUserInput.winners.includes(userInput) || cachedUserInput.losers.includes(userInput)) {
-            throw new ChatError(ChatErrorMessage.UNAVAILABLE_PLAYER)
+        if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
+            return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
         }
 
         const winners = cachedUserInput?.winners || [];
@@ -474,12 +474,14 @@ export class BotService {
         if (userInput === 'ENDE') {
             // SPIEL SPEICHERN oder NACHRICHT ZUM SPEICHERN ANZEIGEN
             await this.updateBotState(msg, BotState.ON);
+            console.log(this.cachedUserInput);
             this.cachedUserInput.delete(msg.from.id);
             return this.sendMessage(msg, 'Spiel eingetragen');
         }
 
-        if (cachedUserInput.winners.includes(userInput) || cachedUserInput.losers.includes(userInput)) {
-            throw new ChatError(ChatErrorMessage.UNAVAILABLE_PLAYER)
+        // write own function for checking for undefined undso
+        if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
+            return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
         }
 
         const losers = cachedUserInput?.losers || [];
@@ -556,10 +558,10 @@ export class BotService {
         return cachedUserInput.data;
     }
 
-    private sendMessage(msg: Message, text: string): Promise<Message> {
+    private sendMessage(msg: Message, text: string, shouldRemoveKeyboard = true): Promise<Message> {
         const options: SendMessageOptions = {
             reply_markup: {
-                remove_keyboard: true,
+                remove_keyboard: shouldRemoveKeyboard,
             },
             parse_mode: 'HTML',
         };
