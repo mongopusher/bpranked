@@ -150,7 +150,7 @@ export class BotService {
             case BotState.DEL_CUP_CONFIRM:
                 return this.deleteCup(msg, userInput);
             case BotState.START_NEW_GAME:
-                return this.startNewGame(msg, user);
+                return this.chooseCupForGame(msg, userInput, user);
             case BotState.NEW_GAME_CUP_SET:
                 return this.addWinner(msg, userInput);
             case BotState.NEW_GAME_WINNERS_SET:
@@ -412,7 +412,7 @@ export class BotService {
         const { attendedCups } = await this.userService.getById(user.id, false, true);
 
         if (attendedCups.length === 1) {
-            await this.chooseCupForGame(msg, attendedCups[0].name);
+            await this.chooseCupForGame(msg, attendedCups[0].name, user);
             return this.askForPlayer(msg, 'Gewinner');
         }
 
@@ -422,9 +422,18 @@ export class BotService {
         return this.sendMessageWithKeyboard(msg, 'Bitte wähle in welchem Cup das Spiel stattfindet', cups, 2);
     }
 
-    public async chooseCupForGame(msg, cupName): Promise<void> {
+    public async chooseCupForGame(msg, cupName, user: TUser): Promise<Message> {
         await this.updateBotState(msg, BotState.NEW_GAME_CUP_SET);
+
+        //check for valid data
+        const cup = await this.cupService.getByName(cupName);
+
+        if(cup.attendees.some((attendee) => attendee.username === user.username) === false) {
+            return this.sendMessage(msg, 'Du kannst nur Spiele für Cups erstellen an denen du teilnimmst!', false);
+        }
+
         this.setCachedUserInput(msg, CacheRoute.newgame, { cupName })
+        return this.askForPlayer(msg, 'Gewinner');
     }
 
     public async askForPlayer(msg, playerLabel: 'Gewinner' | 'Verlierer'): Promise<Message> {
@@ -433,7 +442,7 @@ export class BotService {
 
         const { attendees } = await this.cupService.getByName(cachedUserInput.name);
 
-        if(attendees.length < 2) {
+        if (attendees.length < 2) {
             return this.cancelBot(msg, 'Du brauchst mehr Teilnehmer um ein Spiel zu starten')
         }
 
@@ -463,8 +472,9 @@ export class BotService {
         }
 
         const winners = cachedUserInput?.winners || [];
+        console.log({ winners });
 
-        this.setCachedUserInput(msg, CacheRoute.newgame, winners.concat(userInput));
+        this.addCachedUserInput(msg, CacheRoute.newgame, winners.concat(userInput));
         return this.askForPlayer(msg, 'Gewinner');
     }
 
@@ -485,9 +495,9 @@ export class BotService {
         }
 
         const losers = cachedUserInput?.losers || [];
+        console.log({ losers });
 
-
-        this.setCachedUserInput(msg, CacheRoute.newgame, losers.concat(userInput));
+        this.addCachedUserInput(msg, CacheRoute.newgame, losers.concat(userInput));
         return await this.askForPlayer(msg, 'Verlierer');
     }
 
