@@ -82,7 +82,12 @@ export class CupService {
     }
 
     public async getByName(name: string): Promise<CupEntity> {
-        return await this.cupRepository.findOne({ where: { name }, relations: { attendees: true } });
+        return await this.cupRepository.findOne(
+            {
+                where: { name: name },
+                relations: { attendees: true }
+            }
+        );
     }
 
     public async deleteByName(name: string): Promise<void> {
