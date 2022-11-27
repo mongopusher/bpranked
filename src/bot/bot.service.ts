@@ -445,6 +445,7 @@ export class BotService {
         console.log('askforPlayer', { cachedUserInput });
 
         const { attendees } = await this.cupService.getByName(cachedUserInput.name);
+        console.log({ attendees });
 
         if (attendees.length < 2) {
             return this.cancelBot(msg, 'Du brauchst mehr Teilnehmer um ein Spiel zu starten')
