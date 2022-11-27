@@ -17,6 +17,7 @@ import {TUser} from "@webserver/user/types/user.type";
 import {helpMessage} from "@webserver/bot/commands/help-message.constant";
 import {GameService} from "@webserver/game/game.service";
 import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
+import {CupEntity} from "@webserver/cup/cup.entity";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -413,9 +414,12 @@ export class BotService {
     public async startNewGame(msg: Message, user: TUser): Promise<Message> {
         const { attendedCups } = await this.userService.getById(user.id, false, true);
 
+
         if (attendedCups.length === 1) {
             await this.chooseCupForGame(msg, attendedCups[0].name, user);
-            return this.askForPlayer(msg, 'Gewinner');
+            const cup = await this.cupService.getByName(attendedCups[0].name);
+
+            return this.askForPlayer(msg, 'Gewinner', cup);
         }
 
         const cups = attendedCups.map((cup) => cup.name);
@@ -425,31 +429,26 @@ export class BotService {
     }
 
     public async chooseCupForGame(msg, cupName, user: TUser): Promise<Message> {
-        await this.updateBotState(msg, BotState.NEW_GAME_CUP_SET);
 
         //check for valid data
         const cup = await this.cupService.getByName(cupName);
+
+        if (cup.attendees.length < 2) {
+            return this.cancelBot(msg, 'Du kannst nur Spiele in Cups mit mindestens 2 Teilnehmern erstellen!');
+        }
 
         if (cup.attendees.some((attendee) => attendee.username === user.username) === false) {
             return this.sendMessage(msg, 'Du kannst nur Spiele für Cups erstellen an denen du teilnimmst!', false);
         }
 
         this.setCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame, { cupName })
-        return this.askForPlayer(msg, 'Gewinner');
+        await this.updateBotState(msg, BotState.NEW_GAME_CUP_SET);
+        return this.askForPlayer(msg, 'Gewinner', cup);
     }
 
-    public async askForPlayer(msg, playerLabel: 'Gewinner' | 'Verlierer'): Promise<Message> {
+    public async askForPlayer(msg, playerLabel: 'Gewinner' | 'Verlierer', cup: CupEntity): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
         const winners = cachedUserInput?.winners || [];
-
-        console.log('askforPlayer', { cachedUserInput });
-
-        const cup = await this.cupService.getByName(cachedUserInput.cupName);
-        console.log({ cup });
-
-        if (cup.attendees.length < 2) {
-            return this.cancelBot(msg, 'Du brauchst mehr Teilnehmer um ein Spiel zu starten')
-        }
 
         const usedPlayers = winners.concat(cachedUserInput.losers);
         const availablePlayers = cup.attendees.map((player) => player.username)
@@ -462,23 +461,36 @@ export class BotService {
     public async addWinner(msg: Message, userInput: string): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
 
-        if (userInput === 'ENDE') {
+        const cup = await this.cupService.getByName(cachedUserInput.cupName);
+
+
+        if (userInput === 'ENDE' || cup.attendees) {
             await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
-            return await this.askForPlayer(msg, 'Verlierer');
+            return await this.askForPlayer(msg, 'Verlierer', cup);
         }
 
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
             return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
         }
 
-        const winners = cachedUserInput?.winners || [];
+        const winners = (cachedUserInput?.winners || []).concat(userInput);
 
-        this.addCachedUserInput(msg, CacheRoute.newgame, { winners: winners.concat(userInput) });
-        return this.askForPlayer(msg, 'Gewinner');
+        this.addCachedUserInput(msg, CacheRoute.newgame, { winners });
+
+        const availablePlayers = cup.attendees.map((player) => player.username)
+            .filter((player) => winners.includes(player) === false)
+
+        if (availablePlayers.length === 1) {
+            return this.addLoser(msg, availablePlayers[0]);
+        }
+
+        return this.askForPlayer(msg, 'Gewinner', cup);
     }
 
     public async addLoser(msg: Message, userInput: string): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
+
+        const cup = await this.cupService.getByName(cachedUserInput.cupName);
 
         if (userInput === 'ENDE') {
             // SPIEL SPEICHERN oder NACHRICHT ZUM SPEICHERN ANZEIGEN
@@ -490,10 +502,19 @@ export class BotService {
             return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
         }
 
-        const losers = cachedUserInput?.losers || [];
+        const losers = (cachedUserInput?.losers || []).concat(userInput);
+        this.addCachedUserInput(msg, CacheRoute.newgame, { losers });
 
-        this.addCachedUserInput(msg, CacheRoute.newgame, { losers: losers.concat(userInput) });
-        return await this.askForPlayer(msg, 'Verlierer');
+        const usedPlayers = cachedUserInput?.winners.concat(losers);
+        const availablePlayers = cup.attendees.map((player) => player.username)
+            .filter((player) => usedPlayers.includes(player) === false)
+
+        if (availablePlayers.length === 0) {
+            await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
+            return await this.confirmCreateGame(msg, cachedUserInput);
+        }
+
+        return await this.askForPlayer(msg, 'Verlierer', cup);
     }
 
 
