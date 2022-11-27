@@ -456,6 +456,7 @@ export class BotService {
 
     public async addWinner(msg: Message, userInput: string): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
+        console.log({ cachedUserInput });
 
         if (userInput === 'ENDE') {
             await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
@@ -469,7 +470,7 @@ export class BotService {
         const winners = cachedUserInput?.winners || [];
         console.log({ winners });
 
-        this.addCachedUserInput(msg, CacheRoute.newgame, winners.concat(userInput));
+        this.addCachedUserInput(msg, CacheRoute.newgame, { winners: winners.concat(userInput) });
         return this.askForPlayer(msg, 'Gewinner');
     }
 
