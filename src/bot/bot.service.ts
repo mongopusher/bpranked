@@ -29,7 +29,7 @@ enum CacheRoute {
 }
 
 type TNewGameCache = {
-    name: string;
+    cupName: string;
     winners: Array<string>,
     losers: Array<string>,
 }
@@ -434,7 +434,7 @@ export class BotService {
             return this.sendMessage(msg, 'Du kannst nur Spiele für Cups erstellen an denen du teilnimmst!', false);
         }
 
-        this.setCachedUserInput(msg, CacheRoute.newgame, { cupName })
+        this.setCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame, { cupName })
         return this.askForPlayer(msg, 'Gewinner');
     }
 
@@ -444,7 +444,7 @@ export class BotService {
 
         console.log('askforPlayer', { cachedUserInput });
 
-        const cup = await this.cupService.getByName(cachedUserInput.name);
+        const cup = await this.cupService.getByName(cachedUserInput.cupName);
         console.log({ cup });
 
         if (cup.attendees.length < 2) {
@@ -515,7 +515,7 @@ export class BotService {
             const createGameData = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
             // todo: maybe add cache for remebering the cup? another botstate
 
-            const cup = await this.cupService.getByName(createGameData.name);
+            const cup = await this.cupService.getByName(createGameData.cupName);
             const winners = await this.userService.getMultipleByName(createGameData.winners);
             const losers = await this.userService.getMultipleByName(createGameData.losers);
 
@@ -555,19 +555,18 @@ export class BotService {
         return this.sendMessage(msg, JSON.stringify(allGames));
     }
 
-    private setCachedUserInput(msg: Message, cacheRoute: CacheRoute, input: any): void {
+    private setCachedUserInput<T = any>(msg: Message, cacheRoute: CacheRoute, input: Partial<T>): void {
         this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: input })
     }
 
-    private addCachedUserInput(msg: Message, cacheRoute: CacheRoute, input: any): void {
+    private addCachedUserInput<T = any>(msg: Message, cacheRoute: CacheRoute, input: Partial<T> | T): void {
         const cachedUserInput = this.cachedUserInput.get(msg.from.id);
-        console.log('')
 
         if (cachedUserInput.route !== cacheRoute) {
             throw new ChatError(ChatErrorMessage.CACHE_INVALID_FORMAT);
         }
 
-        if (cachedUserInput?.data instanceof Array) {
+        if (cachedUserInput?.data instanceof Array && input instanceof Array) {
             this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: [...cachedUserInput.data, ...input] })
             return;
         }
