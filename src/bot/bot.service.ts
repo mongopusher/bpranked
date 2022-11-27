@@ -463,8 +463,7 @@ export class BotService {
 
         const cup = await this.cupService.getByName(cachedUserInput.cupName);
 
-
-        if (userInput === 'ENDE' || cup.attendees) {
+        if (userInput === 'ENDE') {
             await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
             return await this.askForPlayer(msg, 'Verlierer', cup);
         }
