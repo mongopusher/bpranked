@@ -444,15 +444,15 @@ export class BotService {
 
         console.log('askforPlayer', { cachedUserInput });
 
-        const { attendees } = await this.cupService.getByName(cachedUserInput.name);
-        console.log({ attendees });
+        const cup = await this.cupService.getByName(cachedUserInput.name);
+        console.log({ cup });
 
-        if (attendees.length < 2) {
+        if (cup.attendees.length < 2) {
             return this.cancelBot(msg, 'Du brauchst mehr Teilnehmer um ein Spiel zu starten')
         }
 
         const usedPlayers = winners.concat(cachedUserInput.losers);
-        const availablePlayers = attendees.map((player) => player.username)
+        const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) === false)
 
         availablePlayers.push('ENDE');
