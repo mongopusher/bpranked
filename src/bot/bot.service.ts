@@ -449,12 +449,20 @@ export class BotService {
     public async askForPlayer(msg, playerLabel: 'Gewinner' | 'Verlierer', cup: CupEntity): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
         const winners = cachedUserInput?.winners || [];
+        const losers = cachedUserInput?.losers || [];
 
-        const usedPlayers = winners.concat(cachedUserInput.losers);
+        const usedPlayers = winners.concat(losers);
         const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) === false)
 
-        availablePlayers.push('ENDE');
+        if (playerLabel === 'Gewinner' && winners.length !== 0) {
+            availablePlayers.push('ENDE');
+        }
+
+        if (playerLabel === 'Verlierer' && losers.length !== 0) {
+            availablePlayers.push('ENDE');
+        }
+
         return this.sendMessageWithKeyboard(msg, `Bitte wähle die ${playerLabel} des Spiels`, availablePlayers, 2);
     }
 
