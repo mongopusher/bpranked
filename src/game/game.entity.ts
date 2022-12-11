@@ -7,7 +7,9 @@ export class GameEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => CupEntity, (cup) => cup.games)
+    @ManyToOne(() => CupEntity, (cup) => cup.games, {
+        onDelete: 'CASCADE',
+    })
     cup: CupEntity;
 
     @ManyToMany(() => UserEntity, (user) => user.gamesWon)

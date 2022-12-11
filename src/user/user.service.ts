@@ -11,7 +11,6 @@ import {UpdateUserDto} from '@webserver/user/dto/updateUser.dto';
 import * as fs from 'fs';
 import {BotState} from "@webserver/bot/bot-state.constant";
 import {TUser} from "@webserver/user/types/user.type";
-import {FindManyOptions} from "typeorm/find-options/FindManyOptions";
 import {FindOptionsWhere} from "typeorm/find-options/FindOptionsWhere";
 
 @Injectable()

@@ -394,11 +394,13 @@ export class BotService {
     private async confirmDeleteCup(msg: Message, input: string, user: TUser): Promise<Message> {
         const { ownedCups } = await this.userService.getById(user.id, false, true);
 
-        if (ownedCups.find((cup) => cup.name === input) === undefined) {
+        const cupToDelete = ownedCups.find((cup) => cup.name === input)
+
+        if (cupToDelete === undefined) {
             return this.cancelBot(msg);
         }
 
-        this.setCachedUserInput(msg, CacheRoute.delcup, input)
+        this.setCachedUserInput(msg, CacheRoute.delcup, cupToDelete.id)
         const textReply = `Möchtest du <b>${input}</b> wirklich löschne? Bitte gib zur Bestätigung <i>${DELETE_CONFIRM_STRING}</i> ein.`;
 
         await this.updateBotState(msg, BotState.DEL_CUP_CONFIRM);
@@ -412,10 +414,15 @@ export class BotService {
 
         // TODO: delete Elo and Games
 
-        const cupName = this.getCachedUserInput(msg, CacheRoute.delcup);
+        const cupId = this.getCachedUserInput(msg, CacheRoute.delcup);
 
-        await this.cupService.deleteByName(cupName);
-        const textReply = `<i>${cupName}</i> wurde gelöscht.`;
+        const cup = await this.cupService.getById(cupId);
+
+        const eloIds = cup.elos.map((elo) => elo.id);
+        // this.eloService.deleteByIds(eloIds);
+
+        await this.cupService.deleteById(cupId);
+        const textReply = `<i>${cup.name}</i> wurde gelöscht.`;
 
         await this.updateBotState(msg, BotState.ON);
         return await this.sendMessage(msg, textReply);

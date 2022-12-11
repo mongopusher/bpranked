@@ -90,8 +90,29 @@ export class CupService {
         );
     }
 
+    public async getById(id: number): Promise<CupEntity> {
+        return await this.cupRepository.findOne(
+            {
+                where: { id },
+                relations: {
+                    attendees: true,
+                    elos: true,
+                    games: true,
+                }
+            }
+        );
+    }
+
     public async deleteByName(name: string): Promise<void> {
         const deleteResult = await this.cupRepository.delete({ name });
+
+        if (deleteResult.affected !== 1) {
+            throw new Error('Only 1 row should have been deleted');
+        }
+    }
+
+    public async deleteById(id: number): Promise<void> {
+        const deleteResult = await this.cupRepository.delete({ id });
 
         if (deleteResult.affected !== 1) {
             throw new Error('Only 1 row should have been deleted');
