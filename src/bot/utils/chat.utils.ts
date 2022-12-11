@@ -1,6 +1,8 @@
 import {KeyboardButton, ReplyKeyboardMarkup} from "node-telegram-bot-api";
 import {CupEntity} from "@webserver/cup/cup.entity";
 import moment from "moment";
+import {GameEntity} from "@webserver/game/game.entity";
+import {UserEntity} from "@webserver/user/user.entity";
 
 
 export const DATE_FORMAT_DE = 'DD.MM.YYYY';
@@ -38,7 +40,6 @@ export class ChatUtils {
         return responseLines.join('\n');
     }
 
-
     public static createTable(columnLengths: Array<number>, inputArray: Array<any>): string {
         let tableArray = inputArray.map((dataEntry: any) => {
             if (dataEntry.toString().length > columnLengths[0]) {
@@ -51,4 +52,29 @@ export class ChatUtils {
 
         return `<code>${tableArray.join('\n')}</code>`
     }
+
+    public static getFormattedGameWithUser(game: GameEntity, user: UserEntity): string {
+        const winnerIds = game.winners.map((winner) => winner.id);
+
+        const cupInfo = ChatUtils.getFormattedCup(game.cup);
+        const date = moment(game.created_at).format(DATE_FORMAT_EXTENDED_DE);
+
+        const gameHeader = `${cupInfo} - ${date}`;
+        let gameBody;
+
+        if (winnerIds.includes(user.id) === true) {
+            gameBody = `Gewonnen ${ChatUtils.getGameMessage(game.winners, game.losers, user)}`;
+        } else {
+            gameBody = `Verloren ${ChatUtils.getGameMessage(game.losers, game.winners, user)}`;
+        }
+        return [gameHeader, gameBody, ''].join('\n');
+    }
+
+    private static getGameMessage(myTeam: Array<UserEntity>, theirTeam: Array<UserEntity>, self: UserEntity): string {
+        const mates = myTeam.filter((winner) => winner.id != self.id).map((user) => user.username);
+        const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
+        const againstEnemies = `gegen ${theirTeam.map((user) => user.username).join(', ')}`;
+        return `${withMates}${againstEnemies}`;
+    }
+
 }

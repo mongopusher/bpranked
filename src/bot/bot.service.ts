@@ -18,7 +18,6 @@ import {helpMessage} from "@webserver/bot/commands/help-message.constant";
 import {GameService} from "@webserver/game/game.service";
 import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
 import {CupEntity} from "@webserver/cup/cup.entity";
-import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
 import {EloService} from "@webserver/elo/elo.service";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
@@ -583,18 +582,7 @@ export class BotService {
         const games = await this.gameService.getGamesByIds(gameIds);
 
         const textReply = games.map((game) => {
-            const winnerIds = game.winners.map((winner) => winner.id);
-            const isWinner = winnerIds.includes(userWithRelations.id);
-            if (isWinner === true) {
-                const mates = game.winners.filter((winner) => winner.id != user.id).map((user) => user.username);
-                const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
-                const againstEnemies = `gegen ${game.losers.map((user) => user.username).join(', ')}`;
-                return `Gewonnen ${withMates}${againstEnemies}`;
-            }
-            const mates = game.losers.filter((loser) => loser.id != user.id).map((user) => user.username);
-            const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
-            const againstEnemies = `gegen ${game.winners.map((user) => user.username).join(', ')}`;
-            return `Verloren ${withMates}${againstEnemies}`;
+            return ChatUtils.getFormattedGameWithUser(game, userWithRelations);
         }).join('\n')
 
         return this.sendMessage(msg, textReply);
