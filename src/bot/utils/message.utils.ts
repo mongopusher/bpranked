@@ -13,10 +13,10 @@ export const getInitialGreeting = (name: string): string => {
 
 export const getGreeting = (name: string): string => {
     const greetings = [
-        `Hi ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}! Was geht ab?`,
-        `Óla ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}! Willkommen zurück!`,
-        `Grias di ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}, altes Scheißhaus!`,
-        `Wazzuuup ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}!?`,
+        `Hi ${name}! Was geht ab?`,
+        `Óla ${name}! Willkommen zurück!`,
+        `Grias di ${name}, altes Scheißhaus!`,
+        `Wazzuuup ${name}!?`,
     ];
 
     const random = Math.floor(Math.random() * greetings.length);

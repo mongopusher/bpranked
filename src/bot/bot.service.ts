@@ -20,6 +20,7 @@ import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
 import {CupEntity} from "@webserver/cup/cup.entity";
 import {EloService} from "@webserver/elo/elo.service";
 import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
+import {EMOJI} from "@webserver/bot/utils/emoji.constant";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -61,6 +62,25 @@ export class BotService {
 
         this.bot.on('message', async (msg) => {
             if (msg.chat.type !== 'private') {
+                return this.sendMessage(msg,
+                    EMOJI.FACE_WITH_TEARS_OF_JOY +
+                        EMOJI.LOUDLY_CRYING_FACE +
+                        EMOJI.CLINKING_BEER_MUGS +
+                        EMOJI.BEER_MUG +
+                        EMOJI.PARTY_POPPER +
+                        EMOJI.SPARKLES +
+                        EMOJI.CROSS_MARK +
+                        EMOJI.WHITE_HEAVY_CHECK_MARK +
+                        EMOJI.POUTING_FACE +
+                        EMOJI.SMILING_FACE_WITH_HEART_SHAPED_EYES +
+                        EMOJI.FLUSHED_FACE +
+                        EMOJI.BOAR +
+                        EMOJI.PILE_OF_POO +
+                        EMOJI.SLEEPING_SYMBOL +
+                        EMOJI.NO_ENTRY_SIGN +
+                        EMOJI.AUBERGINE +
+                        EMOJI.PEACH +
+                        EMOJI.SHRUG);
                 // TODO: add support for specific commands like show highscore
                 return;
             }
