@@ -12,11 +12,15 @@ export class GameService {
 
     public async createGame(createGameDto: CreateGameDto): Promise<GameEntity> {
         console.log({ createGameDto });
-        return '' as any;
+
+        const game = new GameEntity();
+        Object.assign(game, createGameDto);
+
+        return this.gameRepository.save(game);
     }
 
     public async getGameById(id: number): Promise<GameEntity> {
-        return this.gameRepository.findOneBy({id})
+        return this.gameRepository.findOneBy({ id })
     }
 
     public async getAllGames(): Promise<Array<GameEntity>> {

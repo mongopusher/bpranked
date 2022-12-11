@@ -1,6 +1,7 @@
 import {Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
 import {UserEntity} from "@webserver/user/user.entity";
 import {GameEntity} from "@webserver/game/game.entity";
+import {EloEntity} from "@webserver/elo/elo.entity";
 
 @Entity({name: 'cups'})
 export class CupEntity {
@@ -16,6 +17,9 @@ export class CupEntity {
     @ManyToMany(() => UserEntity, (user) => user.attendedCups)
     @JoinTable()
     attendees: Array<UserEntity> | undefined;
+
+    @OneToMany(() => EloEntity, (elo) => elo.user)
+    elos: Array<EloEntity>;
 
     @OneToMany(() => GameEntity, (game) => game.cup)
     games: Array<GameEntity>;

@@ -550,7 +550,7 @@ export class BotService {
             const losers = await this.userService.getMultipleByName(createGameData.losers);
 
 
-            const createGameDto = new CreateGameDto(cup, winners, losers)
+            const createGameDto = new CreateGameDto(cup, winners, losers);
             await this.gameService.createGame(createGameDto);
 
             // send broadcast to every mensch

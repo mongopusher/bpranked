@@ -3,6 +3,7 @@ import {hash} from 'bcrypt';
 import {BotState} from "@webserver/bot/bot-state.constant";
 import {CupEntity} from "@webserver/cup/cup.entity";
 import {GameEntity} from '@webserver/game/game.entity';
+import {EloEntity} from "@webserver/elo/elo.entity";
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -34,6 +35,9 @@ export class UserEntity {
 
     @OneToMany(() => CupEntity, (cup) => cup.manager)
     ownedCups: Array<CupEntity>;
+
+    @OneToMany(() => EloEntity, (elo) => elo.user)
+    elos: Array<EloEntity>;
 
     @ManyToMany(() => CupEntity, (cup) => cup.attendees)
     attendedCups: Array<CupEntity>;
