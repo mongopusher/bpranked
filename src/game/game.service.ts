@@ -39,6 +39,7 @@ export class GameService {
                 relations: {
                     winners: true,
                     losers: true,
+                    cup: true,
                 }
             }
         )
