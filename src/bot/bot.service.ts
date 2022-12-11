@@ -613,15 +613,9 @@ export class BotService {
     }
 
     public async getElo(msg: Message, user: TUser): Promise<Message> {
-        // const userWithRelations = await this.userService.getByIdWithRelations(user.id, { elos: true });
-
         const elos = await this.eloService.getByUserIdWithCups(user.id);
-        // const elos = userWithRelations.elos;
-        // const cups = userWithRelations.attendedCups;
 
-        console.log({ elos });
-
-        const textReply = 'blablub';
+        const textReply = elos.map((elo) => ChatUtils.getFormattedCup(elo.cup, elo.elo)).join('\n');
 
         return this.sendMessage(msg, textReply);
     }
