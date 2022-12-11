@@ -60,6 +60,11 @@ export class BotService {
         this.bot = new TelegramBot(token, { polling: true });
 
         this.bot.on('message', async (msg) => {
+            if (msg.chat.type !== 'private') {
+                // TODO: add support for specific commands like show highscore
+                return;
+            }
+
             try {
                 await this.handleMessage(msg);
             } catch (error) {
@@ -588,7 +593,7 @@ export class BotService {
     public async createGame(msg: Message, confirmResponse: string, user: TUser): Promise<Message> {
         if (confirmResponse === 'JA') {
             const createGameData = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
-            // todo: maybe add cache for remebering the cup? another botstate
+            // TODO: maybe add cache for remebering the cup? another botstate
 
             const cup = await this.cupService.getByName(createGameData.cupName);
             const winners = await this.userService.getMultipleByName(createGameData.winners);
@@ -600,7 +605,7 @@ export class BotService {
 
             await this.eloService.updateElos(cup, winners, losers);
 
-            // send broadcast to every mensch
+            // TODO: send broadcast to every mensch
             this.cachedUserInput.delete(msg.from.id);
             await this.updateBotState(msg, BotState.ON);
             return this.sendMessage(msg, 'Spiel eingetragen.');
