@@ -587,12 +587,12 @@ export class BotService {
             const isWinner = winnerIds.includes(userWithRelations.id);
             if (isWinner === true) {
                 const mates = game.winners.filter((winner) => winner.id != user.id).map((user) => user.username);
-                const withMates = mates !== undefined ? `mit ${mates.join(', ')} ` : '';
+                const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
                 const againstEnemies = `gegen ${game.losers.map((user) => user.username).join(', ')}`;
                 return `Gewonnen ${withMates}${againstEnemies}`;
             }
             const mates = game.losers.filter((loser) => loser.id != user.id).map((user) => user.username);
-            const withMates = mates !== undefined ? `mit ${mates.join(', ')} ` : '';
+            const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
             const againstEnemies = `gegen ${game.winners.map((user) => user.username).join(', ')}`;
             return `Verloren ${withMates}${againstEnemies}`;
         }).join('\n')
