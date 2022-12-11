@@ -1,6 +1,6 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {UserEntity} from '@webserver/user/user.entity';
-import {FindOneOptions, In, Not, Repository} from 'typeorm';
+import {FindOneOptions, FindOptionsRelations, In, Not, Repository} from 'typeorm';
 import {InjectRepository} from '@nestjs/typeorm';
 import {CreateUserDto} from '@webserver/user/dto/createUser.dto';
 import {sign} from 'jsonwebtoken';
@@ -144,9 +144,17 @@ export class UserService {
                 ownedCups: true,
                 gamesLost: true,
                 gamesWon: true,
-                elos: true,
             };
         }
+
+        return await this.userRepository.findOne(searchOptions);
+    }
+
+    public async getByIdWithRelations(id: number, relations: FindOptionsRelations<UserEntity>): Promise<UserEntity | null> {
+        const searchOptions: FindOneOptions<UserEntity> = {
+            where: { id },
+            relations,
+        };
 
         return await this.userRepository.findOne(searchOptions);
     }

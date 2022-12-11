@@ -613,12 +613,13 @@ export class BotService {
     }
 
     public async getElo(msg: Message, user: TUser): Promise<Message> {
-        const userWithRelations = await this.userService.getById(user.id, false, true);
+        // const userWithRelations = await this.userService.getByIdWithRelations(user.id, { elos: true });
 
-        const elos = userWithRelations.elos;
-        const cups = userWithRelations.attendedCups;
+        const elos = await this.eloService.getByUserIdWithCups(user.id);
+        // const elos = userWithRelations.elos;
+        // const cups = userWithRelations.attendedCups;
 
-        console.log({elos, cups});
+        console.log({ elos });
 
         const textReply = 'blablub';
 

@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
-import {Repository} from "typeorm";
+import {FindOptionsRelations, Repository} from "typeorm";
 import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
 import {EloEntity} from "@webserver/elo/elo.entity";
 import {CreateEloDto} from "./dto/create-elo.dto";
@@ -39,6 +39,13 @@ export class EloService {
 
     public async getEloById(id: number): Promise<EloEntity> {
         return this.eloRepository.findOneBy({ id })
+    }
+
+    public async getByUserIdWithCups(userId: number): Promise<Array<EloEntity>> {
+        return this.eloRepository.createQueryBuilder('elo')
+            .leftJoinAndSelect('elo.cup', 'cup')
+            .where('elo.userId = :userId', { userId })
+            .getMany();
     }
 
     // public async getEloByUserAndCup(user: UserEntity, cup: CupEntity): Promise<EloEntity> {
