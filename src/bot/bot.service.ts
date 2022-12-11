@@ -18,6 +18,8 @@ import {helpMessage} from "@webserver/bot/commands/help-message.constant";
 import {GameService} from "@webserver/game/game.service";
 import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
 import {CupEntity} from "@webserver/cup/cup.entity";
+import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
+import {EloService} from "@webserver/elo/elo.service";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -47,7 +49,8 @@ export class BotService {
 
     public constructor(@Inject(UserService) private readonly userService: UserService,
                        @Inject(CupService) private readonly cupService: CupService,
-                       @Inject(GameService) private readonly gameService: GameService) {
+                       @Inject(GameService) private readonly gameService: GameService,
+                       @Inject(EloService) private readonly eloService: EloService) {
         this.cachedUserInput = new Map<number, TUserInputCache>();
     }
 
@@ -552,6 +555,8 @@ export class BotService {
 
             const createGameDto = new CreateGameDto(cup, winners, losers);
             await this.gameService.createGame(createGameDto);
+
+            await this.eloService.updateElos(cup, winners, losers);
 
             // send broadcast to every mensch
             this.cachedUserInput.delete(msg.from.id);

@@ -8,6 +8,7 @@ import {AuthMiddleware} from '@webserver/user/middlewares/auth.middleware';
 import {BotModule} from "@webserver/bot/bot.module";
 import {CupModule} from "@webserver/cup/cup.module";
 import {GameModule} from "@webserver/game/game.module";
+import {EloModule} from "@webserver/elo/elo.module";
 
 @Module({
     imports: [
@@ -15,7 +16,8 @@ import {GameModule} from "@webserver/game/game.module";
         UserModule,
         BotModule,
         CupModule,
-        GameModule
+        GameModule,
+        EloModule
     ],
     controllers: [AppController],
     providers: [AppService],

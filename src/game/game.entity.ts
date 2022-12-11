@@ -1,8 +1,8 @@
-import {Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {UserEntity} from "@webserver/user/user.entity";
 import {CupEntity} from "@webserver/cup/cup.entity";
 
-@Entity({name: 'games'})
+@Entity({ name: 'games' })
 export class GameEntity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -18,6 +18,6 @@ export class GameEntity {
     @JoinTable()
     losers: Array<UserEntity>;
 
-    @Column()
-    timestamp: Date;
+    @CreateDateColumn()
+    created_at: Date;
 }

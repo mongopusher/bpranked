@@ -1,4 +1,13 @@
-import {BeforeInsert, BeforeUpdate, Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {
+    BeforeInsert,
+    BeforeUpdate,
+    Column,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn
+} from 'typeorm';
 import {hash} from 'bcrypt';
 import {BotState} from "@webserver/bot/bot-state.constant";
 import {CupEntity} from "@webserver/cup/cup.entity";
@@ -37,6 +46,7 @@ export class UserEntity {
     ownedCups: Array<CupEntity>;
 
     @OneToMany(() => EloEntity, (elo) => elo.user)
+    @JoinTable()
     elos: Array<EloEntity>;
 
     @ManyToMany(() => CupEntity, (cup) => cup.attendees)

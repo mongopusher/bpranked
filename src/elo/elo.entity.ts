@@ -1,11 +1,14 @@
-import {Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 import {UserEntity} from "@webserver/user/user.entity";
 import {CupEntity} from "@webserver/cup/cup.entity";
 
-@Entity({name: 'elos'})
+@Entity({ name: 'elos' })
 export class EloEntity {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column()
+    elo: number;
 
     @ManyToOne(() => CupEntity, (cup) => cup.elos)
     cup: CupEntity;
@@ -13,6 +16,6 @@ export class EloEntity {
     @ManyToOne(() => UserEntity, (user) => user.elos)
     user: UserEntity;
 
-    @Column()
-    timestamp: Date;
+    @UpdateDateColumn()
+    updated_at: Date;
 }

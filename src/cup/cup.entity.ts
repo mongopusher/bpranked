@@ -19,6 +19,7 @@ export class CupEntity {
     attendees: Array<UserEntity> | undefined;
 
     @OneToMany(() => EloEntity, (elo) => elo.user)
+    @JoinTable()
     elos: Array<EloEntity>;
 
     @OneToMany(() => GameEntity, (game) => game.cup)
