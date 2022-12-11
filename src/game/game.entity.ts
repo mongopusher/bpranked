@@ -7,7 +7,7 @@ export class GameEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => UserEntity, (user) => user.attendedCups)
+    @ManyToOne(() => CupEntity, (cup) => cup.games)
     cup: CupEntity;
 
     @ManyToMany(() => UserEntity, (user) => user.gamesWon)
