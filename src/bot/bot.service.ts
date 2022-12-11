@@ -62,25 +62,7 @@ export class BotService {
 
         this.bot.on('message', async (msg) => {
             if (msg.chat.type !== 'private') {
-                return this.sendMessage(msg,
-                    EMOJI.FACE_WITH_TEARS_OF_JOY +
-                        EMOJI.LOUDLY_CRYING_FACE +
-                        EMOJI.CLINKING_BEER_MUGS +
-                        EMOJI.BEER_MUG +
-                        EMOJI.PARTY_POPPER +
-                        EMOJI.SPARKLES +
-                        EMOJI.CROSS_MARK +
-                        EMOJI.WHITE_HEAVY_CHECK_MARK +
-                        EMOJI.POUTING_FACE +
-                        EMOJI.SMILING_FACE_WITH_HEART_SHAPED_EYES +
-                        EMOJI.FLUSHED_FACE +
-                        EMOJI.BOAR +
-                        EMOJI.PILE_OF_POO +
-                        EMOJI.SLEEPING_SYMBOL +
-                        EMOJI.NO_ENTRY_SIGN +
-                        EMOJI.AUBERGINE +
-                        EMOJI.PEACH +
-                        EMOJI.SHRUG);
+                return this.sendMessage(msg,                        EMOJI.PEACH);
                 // TODO: add support for specific commands like show highscore
                 return;
             }
