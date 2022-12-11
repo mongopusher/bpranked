@@ -185,8 +185,10 @@ export class BotService {
                 return this.sendMessage(msg, `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`);
             case ChatErrorMessage.DUPLICATE_NAME:
                 return this.sendMessage(msg, `Name bereits vorhanden. Bitte wähle einen anderen.`);
+            case ChatErrorMessage.NO_CUPS:
+                return this.sendMessage(msg, `Es gibt noch keine Cups. Du kannst einen erstellen mit /newcup`);
             case ChatErrorMessage.NO_JOINED_CUPS:
-                return this.sendMessage(msg, `Du nimmst an keinem Cup teil!`);
+                return this.sendMessage(msg, `Du nimmst an keinem Cup teil. Tritt einem Cup bei mit /joincup`);
             case ChatErrorMessage.CACHE_INVALID_FORMAT:
                 return this.cancelBot(msg, `Cache enthält ungültige Daten. Das dürfte nicht passieren. Bitte informiere den Administrator.`);
             case ChatErrorMessage.CACHE_EMPTY:
@@ -345,6 +347,10 @@ export class BotService {
         const now = moment();
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
+        if (cups.length === 0) {
+            throw new ChatError(ChatErrorMessage.NO_CUPS);
+        }
+
         const cup = cups.find((cup) => cup.name === userInput);
 
         if (cup === undefined) {
@@ -371,6 +377,10 @@ export class BotService {
 
     public async getAllCups(msg: Message) {
         const cups = await this.cupService.getAllWithRelations();
+
+        if (cups.length === 0) {
+            throw new ChatError(ChatErrorMessage.NO_CUPS)
+        }
 
         const textReply = cups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
         return await this.sendMessage(msg, textReply)

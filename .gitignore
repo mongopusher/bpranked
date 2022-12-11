@@ -36,5 +36,8 @@ lerna-debug.log*
 
 resources/
 
+# migrations
+src/migrations/*
+
 # environment files
 .env
