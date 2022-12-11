@@ -581,19 +581,19 @@ export class BotService {
         gameIds.push(...userWithRelations.gamesWon.map((game) => game.id));
 
         const games = await this.gameService.getGamesByIds(gameIds);
-        console.log({ games });
 
         const textReply = games.map((game) => {
-            const isWinner = game.winners.includes(userWithRelations);
+            const winnerIds = game.winners.map((winner) => winner.id);
+            const isWinner = winnerIds.includes(userWithRelations.id);
             if (isWinner === true) {
-                const mates = game.winners.filter((winner) => winner != user);
+                const mates = game.winners.filter((winner) => winner.id != user.id).map((user) => user.username);
                 const withMates = mates !== undefined ? `mit ${mates.join(', ')} ` : '';
-                const againstEnemies = `gegen ${game.losers.join(', ')}`;
+                const againstEnemies = `gegen ${game.losers.map((user) => user.username).join(', ')}`;
                 return `Gewonnen ${withMates}${againstEnemies}`;
             }
-            const mates = game.losers.filter((loser) => loser != user);
+            const mates = game.losers.filter((loser) => loser.id != user.id).map((user) => user.username);
             const withMates = mates !== undefined ? `mit ${mates.join(', ')} ` : '';
-            const againstEnemies = `gegen ${game.winners.join(', ')}`;
+            const againstEnemies = `gegen ${game.winners.map((user) => user.username).join(', ')}`;
             return `Verloren ${withMates}${againstEnemies}`;
         }).join('\n')
 
