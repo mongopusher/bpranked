@@ -13,4 +13,7 @@ export enum Command {
     GET_MY_ELO = 'elo',
     NEW_GAME = 'newgame',
     METADATA = 'metadata',
+    CHEERS = 'cheers',
+    PROST = 'prost',
+    GIB = 'gib',
 }

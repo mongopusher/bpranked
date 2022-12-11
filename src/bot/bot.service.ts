@@ -2,7 +2,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import TelegramBot, {Message, SendMessageOptions} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
-import {getFarewell, getGreeting, getInitialGreeting} from "@webserver/bot/utils/message.utils";
+import {getCheers, getFarewell, getGreeting, getInitialGreeting, gib} from "@webserver/bot/utils/message.utils";
 import {UserService} from "@webserver/user/user.service";
 import {CreateUserDto} from "@webserver/user/dto/createUser.dto";
 import {UserEntity} from "@webserver/user/user.entity";
@@ -62,7 +62,6 @@ export class BotService {
 
         this.bot.on('message', async (msg) => {
             if (msg.chat.type !== 'private') {
-                return this.sendMessage(msg,                        EMOJI.PEACH);
                 // TODO: add support for specific commands like show highscore
                 return;
             }
@@ -133,6 +132,11 @@ export class BotService {
                 return this.startNewGame(msg, user);
             case Command.GET_MY_ELO:
                 return this.getElo(msg, user);
+            case Command.PROST:
+            case Command.CHEERS:
+                return this.sendMessage(msg, getCheers());
+            case Command.GIB:
+                return this.sendMessage(msg, gib());
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -258,7 +262,7 @@ export class BotService {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         if (user.botState === BotState.ON) {
-            return this.sendMessage(msg, infoText ?? 'Mir doch egal, hab grad eh nichts gemacht...');
+            return this.sendMessage(msg, infoText ?? `Mir doch egal ${EMOJI.SHRUG} hab grad eh nichts gemacht...`);
         }
 
         await this.updateBotState(msg, BotState.ON);
@@ -325,7 +329,7 @@ export class BotService {
 
         const cup = await this.cupService.create(user, new CreateCupDto(cupName, endDate.toDate()));
         await this.updateBotState(msg, BotState.ON);
-        return await this.bot.sendMessage(msg.chat.id, `Cup "${cup.name}" endet am ${endDate.format(DATE_FORMAT_EXTENDED_DE)}`);
+        return await this.sendMessage(msg, `Cup <i>${cup.name}</i> erstellt!`);
     }
 
     private async startJoinCup(msg: Message, user: TUser): Promise<Message> {
@@ -605,7 +609,8 @@ export class BotService {
 
             await this.eloService.updateElos(cup, winners, losers);
 
-            // TODO: send broadcast to every mensch
+            // TODO: send broadcast to every mensch except creating user
+            // Idea: send sad emoji and send winning emoji (like biceps flex) for losers and winners
             this.cachedUserInput.delete(msg.from.id);
             await this.updateBotState(msg, BotState.ON);
             return this.sendMessage(msg, 'Spiel eingetragen.');

@@ -33,3 +33,29 @@ export const getFarewell = (name: string): string => {
     const random = Math.floor(Math.random() * farewells.length);
     return farewells[random];
 };
+
+export const getCheers = (): string => {
+    const cheers = [
+        `Prost! ${EMOJI.CLINKING_BEER_MUGS}`,
+        `Zum Wohle! ${EMOJI.CLINKING_BEER_MUGS}`,
+        `Skål! ${EMOJI.CLINKING_BEER_MUGS}`,
+        `Cheers! ${EMOJI.CLINKING_BEER_MUGS}`,
+        `Salute! ${EMOJI.CLINKING_BEER_MUGS}`,
+        `Kanpai! ${EMOJI.CLINKING_BEER_MUGS}`,
+    ];
+
+    const random = Math.floor(Math.random() * cheers.length);
+    return cheers[random];
+};
+
+export const gib = (): string => {
+    const strings = [
+        `${EMOJI.BOAR}`,
+        `${EMOJI.PEACH}`,
+        `${EMOJI.AUBERGINE}`,
+        `${EMOJI.PILE_OF_POO}`,
+    ];
+
+    const random = Math.floor(Math.random() * strings.length);
+    return strings[random];
+};

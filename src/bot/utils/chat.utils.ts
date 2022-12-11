@@ -3,6 +3,7 @@ import {CupEntity} from "@webserver/cup/cup.entity";
 import moment from "moment";
 import {GameEntity} from "@webserver/game/game.entity";
 import {UserEntity} from "@webserver/user/user.entity";
+import {EMOJI} from "@webserver/bot/utils/emoji.constant";
 
 
 export const DATE_FORMAT_DE = 'DD.MM.YYYY';
@@ -66,9 +67,9 @@ export class ChatUtils {
         let gameBody;
 
         if (winnerIds.includes(user.id) === true) {
-            gameBody = `Gewonnen ${ChatUtils.getGameMessage(game.winners, game.losers, user)}`;
+            gameBody = `${EMOJI.WHITE_HEAVY_CHECK_MARK} Gewonnen ${ChatUtils.getGameMessage(game.winners, game.losers, user)}`;
         } else {
-            gameBody = `Verloren ${ChatUtils.getGameMessage(game.losers, game.winners, user)}`;
+            gameBody = `${EMOJI.CROSS_MARK} Verloren ${ChatUtils.getGameMessage(game.losers, game.winners, user)}`;
         }
         return [gameHeader, gameBody, ''].join('\n');
     }
