@@ -185,6 +185,8 @@ export class BotService {
                 return this.sendMessage(msg, `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`);
             case ChatErrorMessage.DUPLICATE_NAME:
                 return this.sendMessage(msg, `Name bereits vorhanden. Bitte wähle einen anderen.`);
+            case ChatErrorMessage.NO_JOINED_CUPS:
+                return this.sendMessage(msg, `Du nimmst an keinem Cup teil!`);
             case ChatErrorMessage.CACHE_INVALID_FORMAT:
                 return this.cancelBot(msg, `Cache enthält ungültige Daten. Das dürfte nicht passieren. Bitte informiere den Administrator.`);
             case ChatErrorMessage.CACHE_EMPTY:
@@ -377,9 +379,13 @@ export class BotService {
     private async getJoinedCups(msg: Message, user: TUser): Promise<Message> {
         const userEntity = await this.userService.getById(user.id, false, true);
 
+        if (userEntity.attendedCups.length === 0) {
+            throw new ChatError(ChatErrorMessage.NO_JOINED_CUPS);
+        }
+
         const textReply = userEntity.attendedCups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
 
-        return await this.sendMessage(msg, textReply)
+        return this.sendMessage(msg, textReply)
     }
 
     private async startDeleteCup(msg: Message, user: TUser): Promise<Message> {
@@ -595,6 +601,10 @@ export class BotService {
         gameIds.push(...userWithRelations.gamesLost.map((game) => game.id));
         gameIds.push(...userWithRelations.gamesWon.map((game) => game.id));
 
+        if (gameIds.length === 0) {
+            return this.sendMessage(msg, 'Du hast an keinem Spiel teilgenommen!');
+        }
+
         const games = await this.gameService.getGamesByIds(gameIds);
 
         const textReply = games.map((game) => {
@@ -614,6 +624,10 @@ export class BotService {
 
     public async getElo(msg: Message, user: TUser): Promise<Message> {
         const elos = await this.eloService.getByUserIdWithCups(user.id);
+
+        if (elos.length === 0) {
+            throw new ChatError(ChatErrorMessage.NO_JOINED_CUPS);
+        }
 
         const textReply = elos.map((elo) => ChatUtils.getFormattedCup(elo.cup, elo.elo)).join('\n');
 

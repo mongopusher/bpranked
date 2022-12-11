@@ -10,7 +10,9 @@ export class EloEntity {
     @Column()
     elo: number;
 
-    @ManyToOne(() => CupEntity, (cup) => cup.elos)
+    @ManyToOne(() => CupEntity, (cup) => cup.elos, {
+        onDelete: 'CASCADE',
+    })
     cup: CupEntity;
 
     @ManyToOne(() => UserEntity, (user) => user.elos)
