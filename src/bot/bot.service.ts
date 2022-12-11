@@ -465,6 +465,7 @@ export class BotService {
 
         if (attendedCups.length === 1) {
             await this.chooseCupForGame(msg, attendedCups[0].name, user);
+            console.log('IT SEEMS LIKE THIS IS CONTINUING INSTEAD OF STOPPING HERE');
             const cup = await this.cupService.getByName(attendedCups[0].name);
 
             return this.askForPlayer(msg, 'Gewinner', cup);
