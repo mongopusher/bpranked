@@ -187,6 +187,8 @@ export class BotService {
                 return this.sendMessage(msg, `Name bereits vorhanden. Bitte wähle einen anderen.`);
             case ChatErrorMessage.NO_CUPS:
                 return this.sendMessage(msg, `Es gibt noch keine Cups. Du kannst einen erstellen mit /newcup`);
+            case ChatErrorMessage.NO_ACTIVE_CUPS:
+                return this.sendMessage(msg, `Es gibt keine aktiven Cups. Du kannst einen erstellen mit /newcup`);
             case ChatErrorMessage.NO_JOINED_CUPS:
                 return this.sendMessage(msg, `Du nimmst an keinem Cup teil. Tritt einem Cup bei mit /joincup`);
             case ChatErrorMessage.CACHE_INVALID_FORMAT:
@@ -320,6 +322,10 @@ export class BotService {
 
         const cups = await this.cupService.getBeforeDate(now.toDate());
 
+        if (cups.length === 0) {
+            throw new ChatError(ChatErrorMessage.NO_ACTIVE_CUPS);
+        }
+
         // Get only cups not attended
         const filteredCups = cups.filter((cup) => {
             const foundUser = cup.attendees.find((attendee) => attendee.id === user.id);
@@ -346,10 +352,6 @@ export class BotService {
     private async joinCup(msg: Message, userInput: string, user: TUser): Promise<Message> {
         const now = moment();
         const cups = await this.cupService.getBeforeDate(now.toDate());
-
-        if (cups.length === 0) {
-            throw new ChatError(ChatErrorMessage.NO_CUPS);
-        }
 
         const cup = cups.find((cup) => cup.name === userInput);
 
@@ -448,6 +450,9 @@ export class BotService {
     public async startNewGame(msg: Message, user: TUser): Promise<Message> {
         const { attendedCups } = await this.userService.getById(user.id, false, true);
 
+        if (attendedCups.length === 0) {
+            throw new ChatError(ChatErrorMessage.NO_JOINED_CUPS);
+        }
 
         if (attendedCups.length === 1) {
             await this.chooseCupForGame(msg, attendedCups[0].name, user);
