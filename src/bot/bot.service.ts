@@ -238,7 +238,7 @@ export class BotService {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         if (user.botState === BotState.ON) {
-            return this.bot.sendMessage(msg.chat.id, infoText ?? 'Mir doch egal, hab grad eh nichts gemacht...');
+            return this.sendMessage(msg, infoText ?? 'Mir doch egal, hab grad eh nichts gemacht...');
         }
 
         await this.updateBotState(msg, BotState.ON);
@@ -378,10 +378,16 @@ export class BotService {
 
     private async startDeleteCup(msg: Message, user: TUser): Promise<Message> {
         const userEntity = await this.userService.getById(user.id, false, true);
-        const textReply = 'Welchen deiner Cups möchtest du löschen?';
+
+        if (userEntity.ownedCups.length === 0) {
+            return this.cancelBot(msg, 'Du hast noch keinen Cup!');
+        }
+
         const keyBoardReply = userEntity.ownedCups.map((cup) => cup.name);
 
         await this.updateBotState(msg, BotState.DEL_CUP);
+
+        const textReply = 'Welchen deiner Cups möchtest du löschen?';
         return await this.sendMessageWithKeyboard(msg, textReply, keyBoardReply, 1);
     }
 
@@ -403,6 +409,8 @@ export class BotService {
         if (input !== DELETE_CONFIRM_STRING) {
             return this.cancelBot(msg);
         }
+
+        // TODO: delete Elo and Games
 
         const cupName = this.getCachedUserInput(msg, CacheRoute.delcup);
 

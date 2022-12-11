@@ -11,4 +11,5 @@ export const helpMessage = {
     [Command.DELETE_CUP]: 'lösche einen deiner Cups',
     [Command.GET_ALL_CUPS]: 'zeigt dir alle Cups an',
     [Command.NEW_GAME]: 'trage ein neues Spiel ein',
+    [Command.GET_MY_GAMES]: 'zeigt dir deine letzten 5 Spiele an',
 }
