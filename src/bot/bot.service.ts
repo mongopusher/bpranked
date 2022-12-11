@@ -577,8 +577,8 @@ export class BotService {
         const userWithRelations = await this.userService.getById(user.id, false, true);
         const gameIds = [];
 
-        gameIds.push(userWithRelations.gamesLost.map((game) => game.id));
-        gameIds.push(userWithRelations.gamesWon.map((game) => game.id));
+        gameIds.push(...userWithRelations.gamesLost.map((game) => game.id));
+        gameIds.push(...userWithRelations.gamesWon.map((game) => game.id));
 
         const games = await this.gameService.getGamesByIds(gameIds);
         console.log({ games });
