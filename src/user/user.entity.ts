@@ -24,9 +24,6 @@ export class UserEntity {
     @Column()
     botState: BotState;
 
-    @Column({ nullable: true })
-    elo: number | undefined;
-
     @BeforeInsert()
     @BeforeUpdate()
     async hashPassword() {

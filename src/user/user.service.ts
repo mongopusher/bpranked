@@ -176,7 +176,6 @@ export class UserService {
                 token,
                 telegramId: user.telegramId,
                 expiresIn: 86400,
-                elo: user.elo,
             },
         };
     }
