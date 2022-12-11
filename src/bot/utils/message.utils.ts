@@ -1,3 +1,5 @@
+import {EMOJI} from "@webserver/bot/utils/emoji.constant";
+
 export const getInitialGreeting = (name: string): string => {
     const greetings = [
         `Sei gegrüßt ${name}!\nErweise dich als würdig.`,
@@ -11,10 +13,10 @@ export const getInitialGreeting = (name: string): string => {
 
 export const getGreeting = (name: string): string => {
     const greetings = [
-        `Hi ${name}! Was geht ab?`,
-        `Óla ${name}! Willkommen zurück!`,
-        `Grias di ${name}, altes Scheißhaus!`,
-        `Wazzuuup ${name}!?`,
+        `Hi ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}! Was geht ab?`,
+        `Óla ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}! Willkommen zurück!`,
+        `Grias di ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}, altes Scheißhaus!`,
+        `Wazzuuup ${name}${EMOJI.FACE_WITH_TEARS_OF_JOY}!?`,
     ];
 
     const random = Math.floor(Math.random() * greetings.length);
