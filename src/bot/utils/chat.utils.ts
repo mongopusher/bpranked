@@ -56,7 +56,10 @@ export class ChatUtils {
     public static getFormattedGameWithUser(game: GameEntity, user: UserEntity): string {
         const winnerIds = game.winners.map((winner) => winner.id);
 
-        const cupInfo = ChatUtils.getFormattedCup(game.cup);
+        console.log(game);
+
+        const username = game.cup.manager?.username !== undefined ? `<b>${game.cup.manager.username}</b>s ` : '';
+        const cupInfo = `${username}${game.cup.name}`;
         const date = moment(game.created_at).format(DATE_FORMAT_EXTENDED_DE);
 
         const gameHeader = `${cupInfo} - ${date}`;
