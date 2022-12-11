@@ -191,12 +191,16 @@ export class BotService {
                 return this.sendMessage(msg, `Es gibt keine aktiven Cups. Du kannst einen erstellen mit /newcup`);
             case ChatErrorMessage.NO_JOINED_CUPS:
                 return this.sendMessage(msg, `Du nimmst an keinem Cup teil. Tritt einem Cup bei mit /joincup`);
+            case ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP:
+                return this.cancelBot(msg, 'Du kannst nur Spiele in Cups mit mindestens 2 Teilnehmern erstellen!');
             case ChatErrorMessage.CACHE_INVALID_FORMAT:
                 return this.cancelBot(msg, `Cache enthält ungültige Daten. Das dürfte nicht passieren. Bitte informiere den Administrator.`);
             case ChatErrorMessage.CACHE_EMPTY:
                 return this.cancelBot(msg, `Cache leer obwohl er es nicht sein sollte. Bitte versuche den Prozess erneut zu starten.`);
             case ChatErrorMessage.UNAVAILABLE_PLAYER:
                 return this.cancelBot(msg, `Spieler nicht verfügbar.`);
+            case ChatErrorMessage.ILLEGAL_ACTION:
+                return this.cancelBot(msg, `Unerlaubte Aktion! Vorgang wird abgebrochen.`);
             default:
                 return this.sendMessage(msg, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
         }
@@ -468,16 +472,18 @@ export class BotService {
     }
 
     public async chooseCupForGame(msg, cupName, user: TUser): Promise<Message> {
-
-        //check for valid data
         const cup = await this.cupService.getByName(cupName);
 
+        if (cup.name !== cupName) {
+            throw new ChatError(ChatErrorMessage.ILLEGAL_ACTION);
+        }
+
         if (cup.attendees.length < 2) {
-            return this.cancelBot(msg, 'Du kannst nur Spiele in Cups mit mindestens 2 Teilnehmern erstellen!');
+            throw new ChatError(ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP);
         }
 
         if (cup.attendees.some((attendee) => attendee.username === user.username) === false) {
-            return this.sendMessage(msg, 'Du kannst nur Spiele für Cups erstellen an denen du teilnimmst!', false);
+            throw new ChatError(ChatErrorMessage.ILLEGAL_ACTION);
         }
 
         this.setCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame, { cupName })
