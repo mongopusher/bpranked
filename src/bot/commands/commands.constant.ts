@@ -10,6 +10,7 @@ export enum Command {
     GET_ALL_CUPS = 'getcups',
     GET_ALL_GAMES = 'getgames',
     GET_MY_GAMES = 'mygames',
+    GET_MY_ELO = 'elo',
     NEW_GAME = 'newgame',
     METADATA = 'metadata',
 }

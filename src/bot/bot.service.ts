@@ -19,6 +19,7 @@ import {GameService} from "@webserver/game/game.service";
 import {CreateGameDto} from "@webserver/game/dto/create-game.dto";
 import {CupEntity} from "@webserver/cup/cup.entity";
 import {EloService} from "@webserver/elo/elo.service";
+import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -123,6 +124,8 @@ export class BotService {
                 return this.getAllGames(msg);
             case Command.NEW_GAME:
                 return this.startNewGame(msg, user);
+            case Command.GET_MY_ELO:
+                return this.getElo(msg, user);
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -356,6 +359,9 @@ export class BotService {
 
         const newCup = await this.cupService.update(cup);
 
+        const createEloDto = new CreateEloDto(user as UserEntity, cup);
+        await this.eloService.createDefaultElo(createEloDto);
+
         const textReply = `Du nimmst jetzt an <b>${newCup.name}</b> teil!`;
 
         return this.sendMessage(msg, textReply);
@@ -412,14 +418,9 @@ export class BotService {
             return this.cancelBot(msg);
         }
 
-        // TODO: delete Elo and Games
-
         const cupId = this.getCachedUserInput(msg, CacheRoute.delcup);
 
         const cup = await this.cupService.getById(cupId);
-
-        const eloIds = cup.elos.map((elo) => elo.id);
-        // this.eloService.deleteByIds(eloIds);
 
         await this.cupService.deleteById(cupId);
         const textReply = `<i>${cup.name}</i> wurde gelöscht.`;
@@ -609,6 +610,19 @@ export class BotService {
         console.log({ allGames });
 
         return this.sendMessage(msg, JSON.stringify(allGames));
+    }
+
+    public async getElo(msg: Message, user: TUser): Promise<Message> {
+        const userWithRelations = await this.userService.getById(user.id, false, true);
+
+        const elos = userWithRelations.elos;
+        const cups = userWithRelations.attendedCups;
+
+        console.log({elos, cups});
+
+        const textReply = 'blablub';
+
+        return this.sendMessage(msg, textReply);
     }
 
     private setCachedUserInput<T = any>(msg: Message, cacheRoute: CacheRoute, input: Partial<T>): void {

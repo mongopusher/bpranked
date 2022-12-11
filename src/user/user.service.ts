@@ -137,7 +137,6 @@ export class UserService {
             searchOptions.select = ['username', 'password'];
         }
 
-
         // TODO: Refactor this to not always fetch all relations
         if (withRelations === true) {
             searchOptions.relations = {
@@ -145,6 +144,7 @@ export class UserService {
                 ownedCups: true,
                 gamesLost: true,
                 gamesWon: true,
+                elos: true,
             };
         }
 
@@ -153,7 +153,7 @@ export class UserService {
 
     public async getMultipleByName(names: Array<string>): Promise<Array<UserEntity>> {
         const searchOptions: FindOptionsWhere<UserEntity> = {
-                username: In(names),
+            username: In(names),
         };
 
         return await this.userRepository.findBy(searchOptions);

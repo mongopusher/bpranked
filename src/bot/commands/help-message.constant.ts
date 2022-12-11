@@ -12,4 +12,5 @@ export const helpMessage = {
     [Command.GET_ALL_CUPS]: 'zeigt dir alle Cups an',
     [Command.NEW_GAME]: 'trage ein neues Spiel ein',
     [Command.GET_MY_GAMES]: 'zeigt dir deine letzten 5 Spiele an',
+    [Command.GET_MY_ELO]: 'zeigt dir die Elostats für Cups an, an denen du teilnimmst',
 }
