@@ -16,6 +16,10 @@ export class GameService {
         const game = new GameEntity();
         Object.assign(game, createGameDto);
 
+        console.log(game);
+        console.log(game.losers);
+        console.log(game.winners);
+
         return this.gameRepository.save(game);
     }
 
