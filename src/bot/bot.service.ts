@@ -182,7 +182,7 @@ export class BotService {
             case ChatErrorMessage.INVALID_DATE:
                 return this.sendMessage(msg, `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`);
             case ChatErrorMessage.DUPLICATE_NAME:
-                return this.sendMessage(msg, `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`);
+                return this.sendMessage(msg, `Name bereits vorhanden. Bitte wähle einen anderen.`);
             case ChatErrorMessage.CACHE_INVALID_FORMAT:
                 return this.cancelBot(msg, `Cache enthält ungültige Daten. Das dürfte nicht passieren. Bitte informiere den Administrator.`);
             case ChatErrorMessage.CACHE_EMPTY:
@@ -575,11 +575,29 @@ export class BotService {
 
     public async getMyGames(msg: Message, user: TUser): Promise<Message> {
         const userWithRelations = await this.userService.getById(user.id, false, true);
+        const gameIds = [];
 
-        const game = await this.gameService.getGameById(userWithRelations.id);
-        console.log({ game });
+        gameIds.push(userWithRelations.gamesLost);
+        gameIds.push(userWithRelations.gamesWon);
 
-        return this.sendMessage(msg, JSON.stringify(game));
+        const games = await this.gameService.getGamesByIds(gameIds);
+        console.log({ games });
+
+        const textReply = games.map((game) => {
+            const isWinner = game.winners.includes(userWithRelations);
+            if (isWinner === true) {
+                const mates = game.winners.filter((winner) => winner != user);
+                const withMates = mates !== undefined ? `mit ${mates.join(', ')} ` : '';
+                const againstEnemies = `gegen ${game.losers.join(', ')}`;
+                return `Gewonnen ${withMates}${againstEnemies}`;
+            }
+            const mates = game.losers.filter((loser) => loser != user);
+            const withMates = mates !== undefined ? `mit ${mates.join(', ')} ` : '';
+            const againstEnemies = `gegen ${game.winners.join(', ')}`;
+            return `Verloren ${withMates}${againstEnemies}`;
+        }).join('\n')
+
+        return this.sendMessage(msg, textReply);
     }
 
     public async getAllGames(msg: Message): Promise<Message> {
