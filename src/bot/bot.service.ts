@@ -353,9 +353,9 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.INVALID_DATE);
         }
 
-        const cupName = this.getCachedUserInput<string>(msg, CacheRoute.newcup);
+        const { cupName, cupType } = this.getCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup);
 
-        const cup = await this.cupService.create(user, new CreateCupDto(cupName, endDate.toDate()));
+        const cup = await this.cupService.create(user, new CreateCupDto(cupName, cupType, endDate.toDate()));
         await this.updateBotState(msg, BotState.ON);
         return await this.sendMessage(msg, `Cup <i>${cup.name}</i> erstellt!`);
     }
