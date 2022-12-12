@@ -21,6 +21,8 @@ import {CupEntity} from "@webserver/cup/cup.entity";
 import {EloService} from "@webserver/elo/elo.service";
 import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
 import {EMOJI} from "@webserver/bot/utils/emoji.constant";
+import {CupType} from "@webserver/cup/cup-type.enum";
+import {CUP} from "@webserver/cup/cup.constant";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -34,8 +36,13 @@ enum CacheRoute {
 
 type TNewGameCache = {
     cupName: string;
-    winners: Array<string>,
-    losers: Array<string>,
+    winners?: Array<string>,
+    losers?: Array<string>,
+}
+
+type TNewCupCache = {
+    cupType: CupType;
+    cupName?: string;
 }
 
 type TUserInputCache = {
@@ -157,6 +164,8 @@ export class BotService {
         console.log(`User [${user.username}] is in [${user.botState}] and sent plain text: [${userInput}]`);
         switch (user.botState) {
             case BotState.START_NEW_CUP:
+                return this.chooseCupType(msg, userInput);
+            case BotState.NEW_CUP_TYPE_SET:
                 return this.setCupName(msg, userInput);
             case BotState.NEW_CUP_NAME_SET:
                 return this.createCup(msg, userInput, user);
@@ -284,26 +293,45 @@ export class BotService {
     private async startNewCup(msg: Message): Promise<Message> {
         await this.updateBotState(msg, BotState.START_NEW_CUP);
 
-        return this.sendMessage(msg, 'Erstelle neuen Cup. Bitte gib zuerst einen Namen für den Cup an.');
+        const textReply = `Bitte wähle aus, was in deinem Cup gespielt werden soll.`
+
+        const keyBoardData = [CUP[CupType.OneVsOne], CUP[CupType.TwoVsTwo], CUP[CupType.ThreeVsThree]];
+
+        return this.sendMessageWithKeyboard(msg, textReply, keyBoardData, 1);
+    }
+
+    private async chooseCupType(msg: Message, userInput: string): Promise<Message> {
+        const cupType: CupType = userInput as CupType;
+
+        if (Object.values(CupType).includes(cupType) === false) {
+            return this.sendMessage(msg, 'Ungültige Eingabe!', false);
+        }
+
+        this.setCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupType })
+
+        await this.updateBotState(msg, BotState.NEW_CUP_TYPE_SET);
+
+        return this.sendMessage(msg, 'Bitte gib einen Namen für den Cup an.');
     }
 
     private async setCupName(msg: Message, userInput: string): Promise<Message> | never {
-        const match = userInput.match(REGEX.TEXT);
-        if (match === null || match[0] !== userInput) {
+        const cupName = userInput;
+        const match = cupName.match(REGEX.TEXT);
+        if (match === null || match[0] !== cupName) {
             throw new ChatError(ChatErrorMessage.ILLEGAL_CHARACTER, 'Buchstaben, Zahlen, Leerzeichen, "-" und "_"');
         }
 
-        if (userInput.length > 32) {
+        if (cupName.length > 32) {
             throw new ChatError(ChatErrorMessage.TOO_MANY_CHARACTERS, 32);
         }
 
         const cups = await this.cupService.getAll();
 
-        if (cups.findIndex((cup) => cup.name === userInput) !== -1) {
+        if (cups.findIndex((cup) => cup.name === cupName) !== -1) {
             throw new ChatError(ChatErrorMessage.DUPLICATE_NAME);
         }
 
-        this.setCachedUserInput(msg, CacheRoute.newcup, userInput)
+        this.addCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupName })
 
         await this.updateBotState(msg, BotState.NEW_CUP_NAME_SET);
 

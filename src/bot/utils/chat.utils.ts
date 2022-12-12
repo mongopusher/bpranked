@@ -29,6 +29,8 @@ export class ChatUtils {
         };
     }
 
+
+    /* TODO: Use either this or the shizzle from /elo */
     public static getFormattedCup(cup: CupEntity, elo?: number): string {
         const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
         const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);

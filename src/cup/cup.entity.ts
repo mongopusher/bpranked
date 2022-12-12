@@ -2,8 +2,9 @@ import {Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGene
 import {UserEntity} from "@webserver/user/user.entity";
 import {GameEntity} from "@webserver/game/game.entity";
 import {EloEntity} from "@webserver/elo/elo.entity";
+import {CupType} from "@webserver/cup/cup-type.enum";
 
-@Entity({name: 'cups'})
+@Entity({ name: 'cups' })
 export class CupEntity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -30,4 +31,11 @@ export class CupEntity {
 
     @Column()
     endTimestamp: Date;
+
+    @Column({
+        type: 'enum',
+        enum: CupType,
+        default: CupType.TwoVsTwo
+    })
+    type: CupType;
 }

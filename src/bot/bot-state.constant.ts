@@ -4,7 +4,8 @@ export enum BotState {
 
     // newcup
     START_NEW_CUP = 20,
-    NEW_CUP_NAME_SET = 21,
+    NEW_CUP_TYPE_SET = 21,
+    NEW_CUP_NAME_SET = 22,
 
     // joincup
     JOIN_CUP = 30,
