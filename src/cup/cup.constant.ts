@@ -5,3 +5,5 @@ export const CUP = {
     [CupType.TwoVsTwo]: '2 vs 2',
     [CupType.ThreeVsThree]: '3 vs 3',
 }
+
+export const CUPS = Object.values(CUP);

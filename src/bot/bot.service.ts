@@ -22,7 +22,7 @@ import {EloService} from "@webserver/elo/elo.service";
 import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
 import {EMOJI} from "@webserver/bot/utils/emoji.constant";
 import {CupType} from "@webserver/cup/cup-type.enum";
-import {CUP} from "@webserver/cup/cup.constant";
+import {CUP, CUPS} from "@webserver/cup/cup.constant";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -303,7 +303,7 @@ export class BotService {
     private async chooseCupType(msg: Message, userInput: string): Promise<Message> {
         const cupType: CupType = userInput as CupType;
 
-        if (Object.values(CupType).includes(cupType) === false) {
+        if (CUPS.includes(cupType) === false) {
             return this.sendMessage(msg, 'Ungültige Eingabe!', false);
         }
 
