@@ -3,7 +3,6 @@ import {UserEntity} from "@webserver/user/user.entity";
 import {GameEntity} from "@webserver/game/game.entity";
 import {EloEntity} from "@webserver/elo/elo.entity";
 import {CupType} from "@webserver/cup/cup-type.enum";
-import {CUP, CUPS} from "@webserver/cup/cup.constant";
 
 @Entity({ name: 'cups' })
 export class CupEntity {
@@ -35,8 +34,8 @@ export class CupEntity {
 
     @Column({
         type: 'enum',
-        enum: [CUPS],
-        default: CUP[CupType.TwoVsTwo],
+        enum: [CupType],
+        default: CupType.TwoVsTwo
     })
-    type: typeof CUPS;
+    type: CupType;
 }

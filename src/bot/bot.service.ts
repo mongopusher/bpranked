@@ -301,13 +301,11 @@ export class BotService {
     }
 
     private async chooseCupType(msg: Message, userInput: string): Promise<Message> {
-        const cupType: CupType = userInput as CupType;
-
-        if (CUPS.includes(cupType) === false) {
+        if (CUPS.includes(userInput) === false) {
             return this.sendMessage(msg, 'Ungültige Eingabe!', false);
         }
 
-        this.setCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupType })
+        this.setCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupType: CUP[userInput]});
 
         await this.updateBotState(msg, BotState.NEW_CUP_TYPE_SET);
 
