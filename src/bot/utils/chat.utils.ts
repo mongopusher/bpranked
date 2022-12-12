@@ -4,6 +4,7 @@ import moment from "moment";
 import {GameEntity} from "@webserver/game/game.entity";
 import {UserEntity} from "@webserver/user/user.entity";
 import {EMOJI} from "@webserver/bot/utils/emoji.constant";
+import {CUP} from "@webserver/cup/cup.constant";
 
 
 export const DATE_FORMAT_DE = 'DD.MM.YYYY';
@@ -30,17 +31,23 @@ export class ChatUtils {
     }
 
 
-    /* TODO: Use either this or the shizzle from /elo */
-    public static getFormattedCup(cup: CupEntity, elo?: number): string {
+    public static getFormattedCup(cup: CupEntity): string {
         const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
         const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
         const username = cup.manager?.username !== undefined ? `<b>${cup.manager.username}</b>s ` : '';
-        const eloDisplay = elo !== undefined ? `<b>${elo}</b>` : `<i>unranked</i>`
+        const cupType = `<i>${CUP[cup.type]}</i>`;
 
         const responseLines = [`${startDate} - ${endDate}`];
-        responseLines.push(`${username}${cup.name}: ${eloDisplay}`);
+        responseLines.push(`${username}${cup.name}: ${cupType}`);
 
         return responseLines.join('\n');
+    }
+
+    public static getEloForCup(cup: CupEntity, elo?: number): string {
+        const username = cup.manager?.username !== undefined ? `<b>${cup.manager.username}</b>s ` : '';
+        const eloDisplay = elo !== undefined ? `<b>${elo}</b>` : `<i>unranked</i>`
+
+        return `${username}${cup.name}: ${eloDisplay}`;
     }
 
     public static createTable(columnLengths: Array<number>, inputArray: Array<any>): string {

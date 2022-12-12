@@ -688,7 +688,7 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.NO_JOINED_CUPS);
         }
 
-        const textReply = elos.map((elo) => ChatUtils.getFormattedCup(elo.cup, elo.elo)).join('\n');
+        const textReply = elos.map((elo) => ChatUtils.getEloForCup(elo.cup, elo.elo)).join('\n');
 
         return this.sendMessage(msg, textReply);
     }
