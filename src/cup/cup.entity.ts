@@ -38,5 +38,5 @@ export class CupEntity {
         enum: [CUPS],
         default: CUP[CupType.TwoVsTwo],
     })
-    type: CupType;
+    type: typeof CUPS;
 }
