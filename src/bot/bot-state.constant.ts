@@ -24,6 +24,7 @@ export enum BotState {
 
 export const acceptTextBotStates = [
     BotState.START_NEW_CUP,
+    BotState.NEW_CUP_TYPE_SET,
     BotState.NEW_CUP_NAME_SET,
     BotState.JOIN_CUP,
     BotState.DEL_CUP,
