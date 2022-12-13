@@ -3,7 +3,7 @@ export const EMOJI = {
     LOUDLY_CRYING_FACE: '\u{1F62D}',                    // 😭
     CLINKING_BEER_MUGS: '\u{1F37B}',                    // 🍻
     BEER_MUG: '\u{1F37A}',                              // 🍺
-    GLOWING_STAR: '\u{1F31F}',                         // 🌟
+    GLOWING_STAR: '\u{1F31F}',                          // 🌟
     SKULL: '\u{1F480}',                                 // 💀
     PARTY_POPPER: '\u{1F389}',                          // 🎉
     SPARKLES: '\u{2728}',                               // ✨

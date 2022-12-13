@@ -12,7 +12,7 @@ import {REGEX} from "@webserver/bot/regex.constant";
 import {ChatErrorMessage} from "@webserver/bot/error/chat-error-message.constant";
 import {ChatError} from "@webserver/bot/error/chat-error";
 import moment from "moment";
-import {ChatUtils, DATE_FORMAT_DE, DATE_FORMAT_EXTENDED_DE} from "@webserver/bot/utils/chat.utils";
+import {ChatUtils, DATE_FORMAT_DE} from "@webserver/bot/utils/chat.utils";
 import {TUser} from "@webserver/user/types/user.type";
 import {helpMessage} from "@webserver/bot/commands/help-message.constant";
 import {GameService} from "@webserver/game/game.service";
@@ -32,17 +32,24 @@ enum CacheRoute {
     joincup = 'joincup',
     delcup = 'delcup',
     newgame = 'newgame',
+    gameconfirmation = 'gameconfirmation'
 }
 
 type TNewGameCache = {
     cupName: string;
     winners?: Array<string>,
     losers?: Array<string>,
+    acceptingLosers?: Array<string>,
 }
 
 type TNewCupCache = {
     cupType: CupMode;
     cupName?: string;
+}
+
+type TGameConfirmationCache = {
+    creatorName: string;
+    cupName: string;
 }
 
 type TUserInputCache = {
@@ -141,9 +148,9 @@ export class BotService {
                 return this.getElo(msg, user);
             case Command.PROST:
             case Command.CHEERS:
-                return this.sendMessage(msg, getCheers());
+                return this.answer(msg, getCheers());
             case Command.GIB:
-                return this.sendMessage(msg, gib());
+                return this.answer(msg, gib());
             case Command.HELP:
             default:
                 return this.sendHelp(msg.chat.id);
@@ -182,7 +189,7 @@ export class BotService {
             case BotState.NEW_GAME_WINNERS_SET:
                 return this.addLoser(msg, userInput);
             case BotState.NEW_GAME_LOSERS_SET:
-                return this.createGame(msg, userInput, user);
+                return this.broadcastCreateGameConfirmation(msg, userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
         }
@@ -196,21 +203,21 @@ export class BotService {
 
         switch (error.message) {
             case ChatErrorMessage.TOO_MANY_CHARACTERS:
-                return this.sendMessage(msg, `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`);
+                return this.answer(msg, `Bitte wähle einen kürzeren Namen. Maximal ${error.data} Zeichen.`);
             case ChatErrorMessage.ILLEGAL_CHARACTER:
-                return this.sendMessage(msg, `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`);
+                return this.answer(msg, `Unerlaubte Schriftzeichen erkannt. Bitte verwende nur ${error.data}.`);
             case ChatErrorMessage.INVALID_DATE_FORMAT:
-                return this.sendMessage(msg, `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`);
+                return this.answer(msg, `Ungültiges Datenformat. Bitte gib das Datum im Format ${error.data} an.`);
             case ChatErrorMessage.INVALID_DATE:
-                return this.sendMessage(msg, `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`);
+                return this.answer(msg, `Ungültiges Datum. Bitte wähle ein Datum, das in der Zukunft liegt.`);
             case ChatErrorMessage.DUPLICATE_NAME:
-                return this.sendMessage(msg, `Name bereits vorhanden. Bitte wähle einen anderen.`);
+                return this.answer(msg, `Name bereits vorhanden. Bitte wähle einen anderen.`);
             case ChatErrorMessage.NO_CUPS:
-                return this.sendMessage(msg, `Es gibt noch keine Cups. Du kannst einen erstellen mit /newcup`);
+                return this.answer(msg, `Es gibt noch keine Cups. Du kannst einen erstellen mit /newcup`);
             case ChatErrorMessage.NO_ACTIVE_CUPS:
-                return this.sendMessage(msg, `Es gibt keine aktiven Cups. Du kannst einen erstellen mit /newcup`);
+                return this.answer(msg, `Es gibt keine aktiven Cups. Du kannst einen erstellen mit /newcup`);
             case ChatErrorMessage.NO_JOINED_CUPS:
-                return this.sendMessage(msg, `Du nimmst an keinem Cup teil. Tritt einem Cup bei mit /joincup`);
+                return this.answer(msg, `Du nimmst an keinem Cup teil. Tritt einem Cup bei mit /joincup`);
             case ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP:
                 return this.cancelBot(msg, `Für ein Spiel in diesem Cup benötigst du mindestens ${error.data} Spieler!`);
             case ChatErrorMessage.CACHE_INVALID_FORMAT:
@@ -222,7 +229,7 @@ export class BotService {
             case ChatErrorMessage.ILLEGAL_ACTION:
                 return this.cancelBot(msg, `Unerlaubte Aktion! Vorgang wird abgebrochen.`);
             default:
-                return this.sendMessage(msg, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
+                return this.answer(msg, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
         }
 
     }
@@ -236,20 +243,20 @@ export class BotService {
 
         const user = await this.userService.getByTelegramId(msg.from.id);
 
-        this.setCachedUserInput(msg, CacheRoute.empty, undefined);
+        this.setCachedUserInput(msg.from.id, CacheRoute.empty, undefined);
 
         if (!user) {
             if (msg.from.username === undefined) {
-                return this.sendMessage(msg, 'Du musst vorher in den Telegram-Einstellungen einen Benutzernamen anlegen.')
+                return this.answer(msg, 'Du musst vorher in den Telegram-Einstellungen einen Benutzernamen anlegen.')
             }
 
-            await this.userService.create(new CreateUserDto(msg.from.username, msg.from.id));
-            return this.sendMessage(msg, getInitialGreeting(name));
+            await this.userService.create(new CreateUserDto(msg.from.username, msg.from.id, msg.chat.id));
+            return this.answer(msg, getInitialGreeting(name));
         }
 
         if (user.botState === BotState.OFF) {
-            await this.updateBotState(msg, BotState.ON);
-            return this.sendMessage(msg, getGreeting(name));
+            await this.updateBotState(msg.from.id, BotState.ON);
+            return this.answer(msg, getGreeting(name));
         }
 
         return this.sendHelp(msg.chat.id);
@@ -263,7 +270,7 @@ export class BotService {
         }
 
         this.cachedUserInput.delete(msg.from.id);
-        await this.updateBotState(msg, BotState.OFF);
+        await this.updateBotState(msg.from.id, BotState.OFF);
         return this.bot.sendMessage(msg.chat.id, getFarewell(name));
     }
 
@@ -271,11 +278,11 @@ export class BotService {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         if (user.botState === BotState.ON) {
-            return this.sendMessage(msg, infoText ?? `Mir doch egal ${EMOJI.SHRUG} hab grad eh nichts gemacht...`);
+            return this.sendMessage(msg.from.id, infoText ?? `Mir doch egal ${EMOJI.SHRUG} hab grad eh nichts gemacht...`);
         }
 
-        await this.updateBotState(msg, BotState.ON);
-        await this.sendMessage(msg, infoText ?? 'Aktueller Vorgang wurde abgebrochen!');
+        await this.updateBotState(msg.from.id, BotState.ON);
+        await this.sendMessage(msg.from.id, infoText ?? 'Aktueller Vorgang wurde abgebrochen!');
     }
 
     private sendHelp(chatId: number): Promise<Message> {
@@ -291,25 +298,25 @@ export class BotService {
     }
 
     private async startNewCup(msg: Message): Promise<Message> {
-        await this.updateBotState(msg, BotState.START_NEW_CUP);
+        await this.updateBotState(msg.from.id, BotState.START_NEW_CUP);
 
         const textReply = `Bitte wähle aus, was in deinem Cup gespielt werden soll.`
 
         const keyBoardData = [CUP[CupMode.One], CUP[CupMode.Two], CUP[CupMode.Three]];
 
-        return this.sendMessageWithKeyboard(msg, textReply, keyBoardData, 1);
+        return this.answerWithKeyboard(msg, textReply, keyBoardData, 1);
     }
 
     private async chooseCupType(msg: Message, userInput: string): Promise<Message> {
         if (CUPS.includes(userInput) === false) {
-            return this.sendMessage(msg, 'Ungültige Eingabe!', false);
+            return this.answer(msg, 'Ungültige Eingabe!', false);
         }
 
-        this.setCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupType: CUP[userInput] });
+        this.setCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup, { cupType: CUP[userInput] });
 
-        await this.updateBotState(msg, BotState.NEW_CUP_TYPE_SET);
+        await this.updateBotState(msg.from.id, BotState.NEW_CUP_TYPE_SET);
 
-        return this.sendMessage(msg, 'Bitte gib einen Namen für den Cup an.');
+        return this.answer(msg, 'Bitte gib einen Namen für den Cup an.');
     }
 
     private async setCupName(msg: Message, userInput: string): Promise<Message> | never {
@@ -329,13 +336,13 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.DUPLICATE_NAME);
         }
 
-        this.addCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupName })
+        this.addCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup, { cupName })
 
-        await this.updateBotState(msg, BotState.NEW_CUP_NAME_SET);
+        await this.updateBotState(msg.from.id, BotState.NEW_CUP_NAME_SET);
 
         const textReply = `Bitte sende mir den Endzeitpunkt für den Cup im Format ${DATE_FORMAT_DE}.`
 
-        return this.sendMessage(msg, textReply);
+        return this.answer(msg, textReply);
     }
 
     private async createCup(msg: Message, userInput: any, user: TUser): Promise<Message> {
@@ -351,11 +358,11 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.INVALID_DATE);
         }
 
-        const { cupName, cupType } = this.getCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup);
+        const { cupName, cupType } = this.getCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup);
 
         const cup = await this.cupService.create(user, new CreateCupDto(cupName, cupType, endDate.toDate()));
-        await this.updateBotState(msg, BotState.ON);
-        return await this.sendMessage(msg, `Cup <i>${cup.name}</i> erstellt!`);
+        await this.updateBotState(msg.from.id, BotState.ON);
+        return await this.answer(msg, `Cup <i>${cup.name}</i> erstellt!`);
     }
 
     private async startJoinCup(msg: Message, user: TUser): Promise<Message> {
@@ -385,9 +392,9 @@ export class BotService {
 
         const keyBoardData = filteredCups.map((cup) => cup.name);
 
-        await this.updateBotState(msg, BotState.JOIN_CUP);
+        await this.updateBotState(msg.from.id, BotState.JOIN_CUP);
 
-        return await this.sendMessageWithKeyboard(msg, responseText, keyBoardData, 1);
+        return await this.answerWithKeyboard(msg, responseText, keyBoardData, 1);
     }
 
     private async joinCup(msg: Message, userInput: string, user: TUser): Promise<Message> {
@@ -415,7 +422,7 @@ export class BotService {
 
         const textReply = `Du nimmst jetzt an <b>${newCup.name}</b> teil!`;
 
-        return this.sendMessage(msg, textReply);
+        return this.answer(msg, textReply);
     }
 
     public async getAllCups(msg: Message) {
@@ -426,7 +433,7 @@ export class BotService {
         }
 
         const textReply = cups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
-        return await this.sendMessage(msg, textReply)
+        return await this.answer(msg, textReply)
     }
 
     private async getJoinedCups(msg: Message, user: TUser): Promise<Message> {
@@ -438,7 +445,7 @@ export class BotService {
 
         const textReply = userEntity.attendedCups.map((cup) => ChatUtils.getFormattedCup(cup)).join('\n\n');
 
-        return this.sendMessage(msg, textReply)
+        return this.answer(msg, textReply)
     }
 
     private async startDeleteCup(msg: Message, user: TUser): Promise<Message> {
@@ -450,10 +457,10 @@ export class BotService {
 
         const keyBoardReply = userEntity.ownedCups.map((cup) => cup.name);
 
-        await this.updateBotState(msg, BotState.DEL_CUP);
+        await this.updateBotState(msg.from.id, BotState.DEL_CUP);
 
         const textReply = 'Welchen deiner Cups möchtest du löschen?';
-        return await this.sendMessageWithKeyboard(msg, textReply, keyBoardReply, 1);
+        return await this.answerWithKeyboard(msg, textReply, keyBoardReply, 1);
     }
 
     private async confirmDeleteCup(msg: Message, input: string, user: TUser): Promise<Message> {
@@ -465,11 +472,11 @@ export class BotService {
             return this.cancelBot(msg);
         }
 
-        this.setCachedUserInput(msg, CacheRoute.delcup, cupToDelete.id)
+        this.setCachedUserInput(msg.from.id, CacheRoute.delcup, cupToDelete.id)
         const textReply = `Möchtest du <b>${input}</b> wirklich löschne? Bitte gib zur Bestätigung <i>${DELETE_CONFIRM_STRING}</i> ein.`;
 
-        await this.updateBotState(msg, BotState.DEL_CUP_CONFIRM);
-        return await this.sendMessage(msg, textReply);
+        await this.updateBotState(msg.from.id, BotState.DEL_CUP_CONFIRM);
+        return await this.answer(msg, textReply);
     }
 
     private async deleteCup(msg: Message, input: string): Promise<Message> {
@@ -477,15 +484,15 @@ export class BotService {
             return this.cancelBot(msg);
         }
 
-        const cupId = this.getCachedUserInput(msg, CacheRoute.delcup);
+        const cupId = this.getCachedUserInput(msg.from.id, CacheRoute.delcup);
 
         const cup = await this.cupService.getById(cupId);
 
         await this.cupService.deleteById(cupId);
         const textReply = `<i>${cup.name}</i> wurde gelöscht.`;
 
-        await this.updateBotState(msg, BotState.ON);
-        return await this.sendMessage(msg, textReply);
+        await this.updateBotState(msg.from.id, BotState.ON);
+        return await this.answer(msg, textReply);
     }
 
     public async startNewGame(msg: Message, user: TUser): Promise<Message> {
@@ -502,8 +509,8 @@ export class BotService {
 
         const cups = attendedCups.map((cup) => cup.name);
 
-        await this.updateBotState(msg, BotState.START_NEW_GAME);
-        return this.sendMessageWithKeyboard(msg, 'Bitte wähle in welchem Cup das Spiel stattfindet', cups, 2);
+        await this.updateBotState(msg.from.id, BotState.START_NEW_GAME);
+        return this.answerWithKeyboard(msg, 'Bitte wähle in welchem Cup das Spiel stattfindet', cups, 2);
     }
 
     public async chooseCupForGame(msg, cupName, user: TUser): Promise<Message> {
@@ -522,7 +529,7 @@ export class BotService {
         }
 
         this.setCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame, { cupName })
-        await this.updateBotState(msg, BotState.NEW_GAME_CUP_SET);
+        await this.updateBotState(msg.from.id, BotState.NEW_GAME_CUP_SET);
         return this.askForPlayer(msg, 'Gewinner', cup);
     }
 
@@ -535,35 +542,34 @@ export class BotService {
         const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) === false)
 
-        return this.sendMessageWithKeyboard(msg, `Bitte wähle die ${playerLabel} des Spiels`, availablePlayers, 1);
+        return this.answerWithKeyboard(msg, `Bitte wähle die ${playerLabel} des Spiels`, availablePlayers, 1);
     }
 
     public async addWinner(msg: Message, userInput: string): Promise<Message> {
-        const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
+        const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg.from.id, CacheRoute.newgame);
 
         const cup = await this.cupService.getByName(cachedUserInput.cupName);
 
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
-            return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
+            return this.answer(msg, 'Spieler ist bereits eingetragen!', false);
         }
 
         const winners = (cachedUserInput?.winners || []).concat(userInput);
 
-        this.addCachedUserInput(msg, CacheRoute.newgame, { winners });
+        this.addCachedUserInput(msg.from.id, CacheRoute.newgame, { winners });
 
 
         const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => winners.includes(player) === false)
 
         if (availablePlayers.length === cup.mode) {
-            this.addCachedUserInput(msg, CacheRoute.newgame, { losers: availablePlayers });
+            this.addCachedUserInput(msg.from.id, CacheRoute.newgame, { losers: availablePlayers });
 
-            await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
             return await this.confirmCreateGame(msg);
         }
 
         if (winners.length === cup.mode) {
-            await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
+            await this.updateBotState(msg.from.id, BotState.NEW_GAME_WINNERS_SET);
             return await this.askForPlayer(msg, 'Verlierer', cup);
         }
 
@@ -571,20 +577,19 @@ export class BotService {
     }
 
     public async addLoser(msg: Message, userInput: string): Promise<Message> {
-        const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
+        const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg.from.id, CacheRoute.newgame);
 
         const cup = await this.cupService.getByName(cachedUserInput.cupName);
 
 
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
-            return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
+            return this.answer(msg, 'Spieler ist bereits eingetragen!', false);
         }
 
         const losers = (cachedUserInput?.losers || []).concat(userInput);
-        this.addCachedUserInput(msg, CacheRoute.newgame, { losers });
+        this.addCachedUserInput(msg.from.id, CacheRoute.newgame, { losers });
 
         if (losers.length === cup.mode) {
-            await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
             return await this.confirmCreateGame(msg);
         }
 
@@ -593,7 +598,7 @@ export class BotService {
 
 
     public async confirmCreateGame(msg: Message): Promise<Message> {
-        const { winners, losers } = this.getCachedUserInput(msg, CacheRoute.newgame);
+        const { winners, losers } = this.getCachedUserInput(msg.from.id, CacheRoute.newgame);
 
         const textReply = [
             `${EMOJI.GLOWING_STAR} <b>${winners.join(', ')}</b> (Gewinner)`,
@@ -603,40 +608,129 @@ export class BotService {
             'Schwörst du bei den Bierponggöttern, dass deine Angaben wahrheitsgemäß sind?',
         ].join('\n')
 
-        await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
-        return this.sendMessageWithKeyboard(msg, textReply, ['JA', 'NEIN'], 2);
+        await this.updateBotState(msg.from.id, BotState.NEW_GAME_LOSERS_SET);
+        return this.answerWithKeyboard(msg, textReply, ['Ja!', 'Nein.'], 2);
     }
 
-
-    public async createGame(msg: Message, confirmResponse: string, user: TUser): Promise<Message> {
-        if (confirmResponse === 'JA') {
-            const createGameData = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
+    public async broadcastCreateGameConfirmation(msg: Message, confirmResponse: string, user: TUser): Promise<Message> {
+        if (ChatUtils.isTruthy(confirmResponse) === true) {
+            const newGameCache = this.getCachedUserInput<TNewGameCache>(msg.from.id, CacheRoute.newgame);
             // TODO: maybe add cache for remebering the cup? another botstate
 
-            const cup = await this.cupService.getByName(createGameData.cupName);
-            const winners = await this.userService.getMultipleByName(createGameData.winners);
-            const losers = await this.userService.getMultipleByName(createGameData.losers);
+            const winners = await this.userService.getMultipleByName(newGameCache.winners);
+            const losers = await this.userService.getMultipleByName(newGameCache.losers);
 
+            // break here
+            for (const player of losers) {
+                const loser = await this.userService.getById(player.id);
+
+                if (player.id === user.id) {
+                    this.processSuccessfulCreateGameConfirmation(msg.from.id, player.username);
+                    continue;
+                }
+
+                if (player.botState === BotState.OFF) {
+                    await this.answer(msg, `${player.username} ist offline und wird nicht um Bestätigung gefragt`);
+                    this.processSuccessfulCreateGameConfirmation(msg.from.id, player.username);
+                    continue;
+                }
+
+                let broadCastText = '';
+                if (player.botState !== BotState.ON) {
+                    broadCastText = 'Tut mir leid, dass ich dich unterbrechen muss.\n';
+                }
+
+                await this.updateBotState(loser.telegramId, BotState.NEW_GAME_BROADCAST_SENT);
+
+                this.setCachedUserInput<TGameConfirmationCache>(loser.telegramId, CacheRoute.gameconfirmation, {
+                    creatorName: user.username,
+                    cupName: newGameCache.cupName,
+                });
+
+                broadCastText += 'Du hast eben ein Spiel gegen verloren, oder?' + ChatUtils.getGameMessage(losers, winners, player);
+
+                await this.askForPlayerConfirmation(player.chatId, broadCastText);
+            }
+
+            await this.updateBotState(msg.from.id, BotState.ON);
+            return this.answer(msg, 'Spiel vorgemerkt. Einer der Verlierer muss das Spiel nun bestätigen.');
+        }
+
+        if (ChatUtils.isFalsy(confirmResponse) === true) {
+            this.cachedUserInput.delete(msg.from.id);
+            return this.cancelBot(msg, 'Eintragen des Spiels abgebrochen.');
+        }
+
+        const textReply = 'Ich habe dich nicht verstanden, bitte antworte laut mit <b>JA</b> oder <b>NEIN</b>';
+        return this.answer(msg, textReply, false);
+    }
+
+    public async receiveCreateGameConfirmation(msg: Message, userInput: string, user: TUser): Promise<Message> {
+        const confirmationCache = this.getCachedUserInput<TGameConfirmationCache>(msg.from.id, CacheRoute.gameconfirmation);
+        const creator = await this.userService.getByUsername(confirmationCache.creatorName);
+
+        if (ChatUtils.isFalsy(userInput) === true) {
+            this.cachedUserInput.delete(creator.telegramId);
+            await this.updateBotState(creator.telegramId, BotState.ON);
+            // TODO: hier ebenfalls broadcasten an alle
+            await this.sendMessage(creator.chatId, `${user.username} hat das Spiel abgelehnt. Vorgang abgebrochen!`);
+        }
+
+        if (ChatUtils.isTruthy(userInput) === true) {
+            this.processSuccessfulCreateGameConfirmation(creator.telegramId, user.username);
+        }
+
+        return this.answer(msg, 'Ich habe dich nicht verstanden.', false);
+    }
+
+    private async processSuccessfulCreateGameConfirmation(creatorTelegramId: number, ownUsername: string): Promise<void> {
+        const newGameCache = this.getCachedUserInput<TNewGameCache>(creatorTelegramId, CacheRoute.newgame);
+
+        const acceptingLosers = newGameCache.acceptingLosers ?? [];
+        acceptingLosers.push(ownUsername);
+
+        if (acceptingLosers.length !== newGameCache.losers.length) {
+            this.addCachedUserInput<TNewGameCache>(creatorTelegramId, CacheRoute.newgame, { acceptingLosers: [...acceptingLosers] })
+            return;
+        }
+
+        // TODO: test 4 real for equal
+        if (acceptingLosers.length === newGameCache.losers.length) {
+            const cup = await this.cupService.getByName(newGameCache.cupName);
+            const winners = await this.userService.getMultipleByName(newGameCache.winners);
+            const losers = await this.userService.getMultipleByName(newGameCache.losers);
 
             const createGameDto = new CreateGameDto(cup, winners, losers);
             await this.gameService.createGame(createGameDto);
 
             await this.eloService.updateElos(cup, winners, losers);
 
-            // TODO: send broadcast to every mensch except creating user
-            // Idea: send sad emoji and send winning emoji (like biceps flex) for losers and winners
-            this.cachedUserInput.delete(msg.from.id);
-            await this.updateBotState(msg, BotState.ON);
-            return this.sendMessage(msg, 'Spiel eingetragen.');
-        }
+            let isCreatorIncluded = false;
+            for (const winner of winners) {
+                await this.sendMessage(winner.chatId, 'Sieg eingetragen!');
+                await this.updateBotState(winner.telegramId, BotState.ON);
+                this.cachedUserInput.delete(winner.telegramId);
+                if (winner.id === creatorTelegramId) {
+                    isCreatorIncluded = true;
+                }
+            }
 
-        if (confirmResponse === 'NEIN') {
-            this.cachedUserInput.delete(msg.from.id);
-            return this.cancelBot(msg, 'Eintragen des Spiels abgebrochen.');
-        }
+            for (const loser of losers) {
+                await this.sendMessage(loser.chatId, 'Niederlage eingetragen!');
+                await this.updateBotState(loser.telegramId, BotState.ON);
+                this.cachedUserInput.delete(loser.telegramId);
+                if (loser.id === creatorTelegramId) {
+                    isCreatorIncluded = true;
+                }
+            }
 
-        const textReply = 'Ich habe dich nicht verstanden, bitte antworte laut mit <b>JA</b> oder <b>NEIN</b>';
-        return this.sendMessage(msg, textReply, false);
+            if (isCreatorIncluded === false) {
+                const creator = await this.userService.getByTelegramId(creatorTelegramId);
+                await this.updateBotState(creator.telegramId, BotState.ON);
+                this.cachedUserInput.delete(creator.telegramId);
+                await this.sendMessage(creator.chatId, 'Spiel eingetragen!');
+            }
+        }
     }
 
     public async getMyGames(msg: Message, user: TUser): Promise<Message> {
@@ -647,7 +741,7 @@ export class BotService {
         gameIds.push(...userWithRelations.gamesWon.map((game) => game.id));
 
         if (gameIds.length === 0) {
-            return this.sendMessage(msg, 'Du hast an keinem Spiel teilgenommen!');
+            return this.answer(msg, 'Du hast an keinem Spiel teilgenommen!');
         }
 
         const games = await this.gameService.getGamesByIds(gameIds);
@@ -656,7 +750,7 @@ export class BotService {
             return ChatUtils.getFormattedGameWithUser(game, userWithRelations);
         }).join('\n')
 
-        return this.sendMessage(msg, textReply);
+        return this.answer(msg, textReply);
     }
 
     public async getAllGames(msg: Message): Promise<Message> {
@@ -664,7 +758,7 @@ export class BotService {
 
         console.log({ allGames });
 
-        return this.sendMessage(msg, JSON.stringify(allGames));
+        return this.answer(msg, JSON.stringify(allGames));
     }
 
     public async getElo(msg: Message, user: TUser): Promise<Message> {
@@ -676,40 +770,44 @@ export class BotService {
 
         const textReply = elos.map((elo) => ChatUtils.getEloForCup(elo.cup, elo.elo)).join('\n');
 
-        return this.sendMessage(msg, textReply);
+        return this.answer(msg, textReply);
     }
 
-    private setCachedUserInput<T = any>(msg: Message, cacheRoute: CacheRoute, input: Partial<T>): void {
-        this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: input })
+    private askForPlayerConfirmation(chatId: number, text: string): Promise<Message> {
+        return this.sendMessageWithKeyboard(chatId, text, [`Ja.`], 2)
     }
 
-    private addCachedUserInput<T = any>(msg: Message, cacheRoute: CacheRoute, input: Partial<T> | T): void {
-        const cachedUserInput = this.cachedUserInput.get(msg.from.id);
+    private setCachedUserInput<T = any>(telegramId: number, cacheRoute: CacheRoute, input: Partial<T>): void {
+        this.cachedUserInput.set(telegramId, { route: cacheRoute, data: input })
+    }
+
+    private addCachedUserInput<T = any>(telegramId: number, cacheRoute: CacheRoute, input: Partial<T> | T): void {
+        const cachedUserInput = this.cachedUserInput.get(telegramId);
 
         if (cachedUserInput.route !== cacheRoute) {
             throw new ChatError(ChatErrorMessage.CACHE_INVALID_FORMAT);
         }
 
         if (cachedUserInput?.data instanceof Array && input instanceof Array) {
-            this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: [...cachedUserInput.data, ...input] })
+            this.cachedUserInput.set(telegramId, { route: cacheRoute, data: [...cachedUserInput.data, ...input] })
             return;
         }
 
         if (cachedUserInput?.data instanceof Object) {
-            this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: { ...cachedUserInput.data, ...input } })
+            this.cachedUserInput.set(telegramId, { route: cacheRoute, data: { ...cachedUserInput.data, ...input } })
             return;
         }
 
-        this.cachedUserInput.set(msg.from.id, { route: cacheRoute, data: input })
+        this.cachedUserInput.set(telegramId, { route: cacheRoute, data: input })
     }
 
 
-    private getCachedUserInput<T = any>(msg: Message, cacheRoute: CacheRoute): T {
-        if (this.cachedUserInput.has(msg.from.id) === false) {
+    private getCachedUserInput<T = any>(telegramId: number, cacheRoute: CacheRoute): T {
+        if (this.cachedUserInput.has(telegramId) === false) {
             throw new ChatError(ChatErrorMessage.CACHE_EMPTY);
         }
 
-        const cachedUserInput = this.cachedUserInput.get(msg.from.id);
+        const cachedUserInput = this.cachedUserInput.get(telegramId);
 
         if (cachedUserInput.data === [] || cachedUserInput.data === '') {
             throw new ChatError(ChatErrorMessage.CACHE_EMPTY);
@@ -721,7 +819,11 @@ export class BotService {
         return cachedUserInput.data;
     }
 
-    private sendMessage(msg: Message, text: string, shouldRemoveKeyboard = true): Promise<Message> {
+    private answer(msg: Message, text: string, shouldRemoveKeyboard = true): Promise<Message> {
+        return this.sendMessage(msg.chat.id, text, shouldRemoveKeyboard)
+    };
+
+    private sendMessage(chatId: number, text: string, shouldRemoveKeyboard = true): Promise<Message> {
         const options: SendMessageOptions = {
             reply_markup: {
                 remove_keyboard: shouldRemoveKeyboard,
@@ -729,19 +831,24 @@ export class BotService {
             parse_mode: 'HTML',
         };
 
-        return this.bot.sendMessage(msg.chat.id, text, options)
+        return this.bot.sendMessage(chatId, text, options);
+    }
+
+    private answerWithKeyboard(msg: Message, text: string, keyBoardData: Array<any>, columns: number): Promise<Message> {
+        return this.sendMessageWithKeyboard(msg.chat.id, text, keyBoardData, columns);
     };
 
-    private sendMessageWithKeyboard(msg: Message, text: string, keyBoardData: Array<any>, columns: number): Promise<Message> {
+    private sendMessageWithKeyboard(chatId: number, text: string, keyBoardData: Array<any>, columns: number): Promise<Message> {
         const options: SendMessageOptions = {
             reply_markup: ChatUtils.getKeyboardMarkup(keyBoardData, columns),
             parse_mode: 'HTML',
         };
 
-        return this.bot.sendMessage(msg.chat.id, text, options)
+        return this.bot.sendMessage(chatId, text, options)
     };
 
-    private updateBotState(msg: Message, botState: BotState): Promise<TUser> {
-        return this.userService.updateBotstate(msg.from.id, botState);
+
+    private updateBotState(telegramId: number, botState: BotState): Promise<TUser> {
+        return this.userService.updateBotstate(telegramId, botState);
     }
 }

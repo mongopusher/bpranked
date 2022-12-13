@@ -19,7 +19,10 @@ export enum BotState {
     NEW_GAME_CUP_SET = 51,
     NEW_GAME_WINNERS_SET = 52,
     NEW_GAME_LOSERS_SET = 53,
+    NEW_GAME_BROADCAST_SENT = 54,
 
+    // game confirmation
+    GAME_CONFIRMATION = 60,
 }
 
 export const acceptTextBotStates = [
@@ -33,4 +36,5 @@ export const acceptTextBotStates = [
     BotState.NEW_GAME_CUP_SET,
     BotState.NEW_GAME_WINNERS_SET,
     BotState.NEW_GAME_LOSERS_SET,
+    BotState.GAME_CONFIRMATION,
 ]

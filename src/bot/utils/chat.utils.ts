@@ -66,8 +66,6 @@ export class ChatUtils {
     public static getFormattedGameWithUser(game: GameEntity, user: UserEntity): string {
         const winnerIds = game.winners.map((winner) => winner.id);
 
-        console.log(game);
-
         const cupManagerName = game.cup.manager?.username !== undefined ? `<b>${game.cup.manager.username}</b>s ` : '';
         const cupInfo = `${cupManagerName}${game.cup.name}`;
         const date = moment(game.created_at).format(DATE_FORMAT_EXTENDED_DE);
@@ -83,11 +81,20 @@ export class ChatUtils {
         return [gameHeader, gameBody, ''].join('\n');
     }
 
-    private static getGameMessage(myTeam: Array<UserEntity>, theirTeam: Array<UserEntity>, self: UserEntity): string {
+    public static isTruthy(text: string): boolean {
+        const firstSymbol = text.substring(0,4).toUpperCase();
+        return ['Y', 'J', 'YES', 'JA', 'JA!', 'JA.'].includes(firstSymbol);
+    }
+
+    public static isFalsy(text: string): boolean {
+        const firstSymbol = text.substring(0,4).toUpperCase();
+        return ['N', 'NEIN', 'NO'].includes(firstSymbol);
+    }
+
+    public static getGameMessage(myTeam: Array<UserEntity>, theirTeam: Array<UserEntity>, self: UserEntity): string {
         const mates = myTeam.filter((winner) => winner.id != self.id).map((user) => user.username);
         const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
         const againstEnemies = `gegen ${theirTeam.map((user) => user.username).join(', ')}`;
         return `${withMates}${againstEnemies}`;
     }
-
 }

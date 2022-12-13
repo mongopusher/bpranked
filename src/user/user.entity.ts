@@ -23,6 +23,9 @@ export class UserEntity {
     telegramId: number;
 
     @Column()
+    chatId: number | undefined;
+
+    @Column()
     username: string | undefined;
 
     @Column({

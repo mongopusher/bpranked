@@ -167,6 +167,12 @@ export class UserService {
         return await this.userRepository.findBy(searchOptions);
     }
 
+    public async getByUsername(username: string): Promise<TUser | null> {
+        const searchOptions: FindOneOptions<UserEntity> = { where: { username } };
+
+        return await this.userRepository.findOne(searchOptions);
+    }
+
     public async getByTelegramId(telegramId: number): Promise<TUser | null> {
         const searchOptions: FindOneOptions<UserEntity> = { where: { telegramId } };
 
@@ -182,6 +188,7 @@ export class UserService {
                 botState: user.botState,
                 token,
                 telegramId: user.telegramId,
+                chatId: user.chatId,
                 expiresIn: 86400,
             },
         };
