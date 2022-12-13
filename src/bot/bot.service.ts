@@ -556,9 +556,8 @@ export class BotService {
             .filter((player) => winners.includes(player) === false)
 
         if (availablePlayers.length === cup.mode) {
-            for (const player of availablePlayers) {
-                await this.addLoser(msg, player);
-            }
+            this.addCachedUserInput(msg, CacheRoute.newgame, { losers: availablePlayers });
+
             await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
             return await this.confirmCreateGame(msg);
         }
