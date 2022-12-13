@@ -76,9 +76,9 @@ export class ChatUtils {
         let gameBody;
 
         if (winnerIds.includes(user.id) === true) {
-            gameBody = `${EMOJI.WHITE_HEAVY_CHECK_MARK} Gewonnen ${ChatUtils.getGameMessage(game.winners, game.losers, user)}`;
+            gameBody = `${EMOJI.GLOWING_STAR} Gewonnen ${ChatUtils.getGameMessage(game.winners, game.losers, user)}`;
         } else {
-            gameBody = `${EMOJI.CROSS_MARK} Verloren ${ChatUtils.getGameMessage(game.losers, game.winners, user)}`;
+            gameBody = `${EMOJI.SKULL} Verloren ${ChatUtils.getGameMessage(game.losers, game.winners, user)}`;
         }
         return [gameHeader, gameBody, ''].join('\n');
     }

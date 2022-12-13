@@ -584,7 +584,6 @@ export class BotService {
         this.addCachedUserInput(msg, CacheRoute.newgame, { losers });
 
         if (losers.length === cup.mode) {
-            // TODO: Zusammenfassing des spiels ZUM SPEICHERN ANZEIGEN
             await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
             return await this.confirmCreateGame(msg);
         }
@@ -597,9 +596,10 @@ export class BotService {
         const { winners, losers } = this.getCachedUserInput(msg, CacheRoute.newgame);
 
         const textReply = [
-            `<b>${winners.join(', ')}</b> (Gewinner)`,
-            `vs`,
-            `<b>${losers.join(', ')}</b> (Verlierer)`,
+            `${EMOJI.GLOWING_STAR} <b>${winners.join(', ')}</b> (Gewinner)`,
+            `gegen`,
+            `${EMOJI.SKULL} <b>${losers.join(', ')}</b> (Verlierer)`,
+            '',
             'Schwörst du bei den Bierponggöttern, dass deine Angaben wahrheitsgemäß sind?',
         ].join('\n')
 
