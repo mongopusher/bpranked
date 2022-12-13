@@ -21,7 +21,7 @@ import {CupEntity} from "@webserver/cup/cup.entity";
 import {EloService} from "@webserver/elo/elo.service";
 import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
 import {EMOJI} from "@webserver/bot/utils/emoji.constant";
-import {CupMode} from "@webserver/cup/cup-type.enum";
+import {CupMode} from "@webserver/cup/cup-mode.enum";
 import {CUP, CUPS} from "@webserver/cup/cup.constant";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
@@ -513,7 +513,7 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.ILLEGAL_ACTION);
         }
 
-        if (cup.attendees.length < cup.mode) {
+        if (cup.attendees.length < cup.mode * 2) {
             throw new ChatError(ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP);
         }
 

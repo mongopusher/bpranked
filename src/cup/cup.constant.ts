@@ -1,4 +1,4 @@
-import {CupMode} from "@webserver/cup/cup-type.enum";
+import {CupMode} from "@webserver/cup/cup-mode.enum";
 
 export const CUP = {
     [CupMode.One]: '1 vs 1',

@@ -2,7 +2,7 @@ import {Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGene
 import {UserEntity} from "@webserver/user/user.entity";
 import {GameEntity} from "@webserver/game/game.entity";
 import {EloEntity} from "@webserver/elo/elo.entity";
-import {CupMode} from "@webserver/cup/cup-type.enum";
+import {CupMode} from "@webserver/cup/cup-mode.enum";
 
 @Entity({ name: 'cups' })
 export class CupEntity {
