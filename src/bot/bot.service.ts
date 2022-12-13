@@ -181,7 +181,7 @@ export class BotService {
                 return this.addWinner(msg, userInput);
             case BotState.NEW_GAME_WINNERS_SET:
                 return this.addLoser(msg, userInput);
-            case BotState.NEW_GAME_CONFIRM:
+            case BotState.NEW_GAME_LOSERS_SET:
                 return this.createGame(msg, userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
@@ -559,6 +559,8 @@ export class BotService {
             for (const player of availablePlayers) {
                 await this.addLoser(msg, player);
             }
+            await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
+            return await this.confirmCreateGame(msg);
         }
 
         if (winners.length === cup.mode) {
@@ -584,7 +586,7 @@ export class BotService {
 
         if (losers.length === cup.mode) {
             // TODO: Zusammenfassing des spiels ZUM SPEICHERN ANZEIGEN
-            await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
+            await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
             return await this.confirmCreateGame(msg);
         }
 
@@ -602,7 +604,7 @@ export class BotService {
             'Schwörst du bei den Bierponggöttern, dass deine Angaben wahrheitsgemäß sind?',
         ].join('\n')
 
-        await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
+        await this.updateBotState(msg, BotState.NEW_GAME_LOSERS_SET);
         return this.sendMessageWithKeyboard(msg, textReply, ['JA', 'NEIN'], 2);
     }
 
