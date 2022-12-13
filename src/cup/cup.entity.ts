@@ -31,11 +31,11 @@ export class CupEntity {
 
     @Column()
     endTimestamp: Date;
-
-    @Column({
-        type: 'enum',
-        enum: CupType,
-        default: CupType.TwoVsTwo
-    })
-    type: CupType;
+    //
+    // @Column({
+    //     type: 'enum',
+    //     enum: CupType,
+    //     default: CupType.TwoVsTwo
+    // })
+    // type: CupType;
 }
