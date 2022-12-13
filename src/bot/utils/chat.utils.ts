@@ -35,7 +35,7 @@ export class ChatUtils {
         const startDate = moment(cup.startTimestamp).format(DATE_FORMAT_DE);
         const endDate = moment(cup.endTimestamp).format(DATE_FORMAT_DE);
         const username = cup.manager?.username !== undefined ? `<b>${cup.manager.username}</b>s ` : '';
-        const cupType = `<i>${CUP[cup.type]}</i>`;
+        const cupType = `<i>${CUP[cup.mode]}</i>`;
 
         const responseLines = [`${startDate} - ${endDate}`];
         responseLines.push(`${username}${cup.name}: ${cupType}`);

@@ -1,8 +1,8 @@
 import {IsNotEmpty, IsOptional} from 'class-validator';
-import {CupType} from "@webserver/cup/cup-type.enum";
+import {CupMode} from "@webserver/cup/cup-type.enum";
 
 export class CreateCupDto {
-    public constructor(name: string, type: CupType, endTimestamp: Date, startTimestamp?: Date | undefined) {
+    public constructor(name: string, type: CupMode, endTimestamp: Date, startTimestamp?: Date | undefined) {
         this.name = name;
         this.type = type;
         this.endTimestamp = endTimestamp;
@@ -13,7 +13,7 @@ export class CreateCupDto {
     readonly name: string;
 
     @IsNotEmpty()
-    readonly type: CupType;
+    readonly type: CupMode;
 
     @IsNotEmpty()
     readonly endTimestamp: Date;

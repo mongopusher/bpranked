@@ -21,7 +21,7 @@ import {CupEntity} from "@webserver/cup/cup.entity";
 import {EloService} from "@webserver/elo/elo.service";
 import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
 import {EMOJI} from "@webserver/bot/utils/emoji.constant";
-import {CupType} from "@webserver/cup/cup-type.enum";
+import {CupMode} from "@webserver/cup/cup-type.enum";
 import {CUP, CUPS} from "@webserver/cup/cup.constant";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
@@ -41,7 +41,7 @@ type TNewGameCache = {
 }
 
 type TNewCupCache = {
-    cupType: CupType;
+    cupType: CupMode;
     cupName?: string;
 }
 
@@ -295,7 +295,7 @@ export class BotService {
 
         const textReply = `Bitte wähle aus, was in deinem Cup gespielt werden soll.`
 
-        const keyBoardData = [CUP[CupType.OneVsOne], CUP[CupType.TwoVsTwo], CUP[CupType.ThreeVsThree]];
+        const keyBoardData = [CUP[CupMode.One], CUP[CupMode.Two], CUP[CupMode.Three]];
 
         return this.sendMessageWithKeyboard(msg, textReply, keyBoardData, 1);
     }
@@ -513,7 +513,7 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.ILLEGAL_ACTION);
         }
 
-        if (cup.attendees.length < cup.type) {
+        if (cup.attendees.length < cup.mode) {
             throw new ChatError(ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP);
         }
 
@@ -555,13 +555,13 @@ export class BotService {
         const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => winners.includes(player) === false)
 
-        if (availablePlayers.length === cup.type) {
+        if (availablePlayers.length === cup.mode) {
             for (const player of availablePlayers) {
                 await this.addLoser(msg, player);
             }
         }
 
-        if (winners.length === cup.type) {
+        if (winners.length === cup.mode) {
             await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
             return await this.askForPlayer(msg, 'Verlierer', cup);
         }
@@ -582,7 +582,7 @@ export class BotService {
         const losers = (cachedUserInput?.losers || []).concat(userInput);
         this.addCachedUserInput(msg, CacheRoute.newgame, { losers });
 
-        if (losers.length === cup.type) {
+        if (losers.length === cup.mode) {
             // TODO: Zusammenfassing des spiels ZUM SPEICHERN ANZEIGEN
             await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
             return await this.confirmCreateGame(msg);
