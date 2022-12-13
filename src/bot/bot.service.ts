@@ -305,7 +305,7 @@ export class BotService {
             return this.sendMessage(msg, 'Ungültige Eingabe!', false);
         }
 
-        this.setCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupType: CUP[userInput]});
+        this.setCachedUserInput<TNewCupCache>(msg, CacheRoute.newcup, { cupType: CUP[userInput] });
 
         await this.updateBotState(msg, BotState.NEW_CUP_TYPE_SET);
 
@@ -513,7 +513,7 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.ILLEGAL_ACTION);
         }
 
-        if (cup.attendees.length < 2) {
+        if (cup.attendees.length < cup.type) {
             throw new ChatError(ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP);
         }
 
@@ -535,26 +535,13 @@ export class BotService {
         const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => usedPlayers.includes(player) === false)
 
-        if (playerLabel === 'Gewinner' && winners.length !== 0) {
-            availablePlayers.push('ENDE');
-        }
-
-        if (playerLabel === 'Verlierer' && losers.length !== 0) {
-            availablePlayers.push('ENDE');
-        }
-
-        return this.sendMessageWithKeyboard(msg, `Bitte wähle die ${playerLabel} des Spiels`, availablePlayers, 2);
+        return this.sendMessageWithKeyboard(msg, `Bitte wähle die ${playerLabel} des Spiels`, availablePlayers, 1);
     }
 
     public async addWinner(msg: Message, userInput: string): Promise<Message> {
         const cachedUserInput = this.getCachedUserInput<TNewGameCache>(msg, CacheRoute.newgame);
 
         const cup = await this.cupService.getByName(cachedUserInput.cupName);
-
-        if (userInput === 'ENDE') {
-            await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
-            return await this.askForPlayer(msg, 'Verlierer', cup);
-        }
 
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
             return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
@@ -564,11 +551,19 @@ export class BotService {
 
         this.addCachedUserInput(msg, CacheRoute.newgame, { winners });
 
+
         const availablePlayers = cup.attendees.map((player) => player.username)
             .filter((player) => winners.includes(player) === false)
 
-        if (availablePlayers.length === 1) {
-            return this.addLoser(msg, availablePlayers[0]);
+        if (availablePlayers.length === cup.type) {
+            for (const player of availablePlayers) {
+                await this.addLoser(msg, player);
+            }
+        }
+
+        if (winners.length === cup.type) {
+            await this.updateBotState(msg, BotState.NEW_GAME_WINNERS_SET);
+            return await this.askForPlayer(msg, 'Verlierer', cup);
         }
 
         return this.askForPlayer(msg, 'Gewinner', cup);
@@ -579,11 +574,6 @@ export class BotService {
 
         const cup = await this.cupService.getByName(cachedUserInput.cupName);
 
-        if (userInput === 'ENDE') {
-            // SPIEL SPEICHERN oder NACHRICHT ZUM SPEICHERN ANZEIGEN
-            await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
-            return await this.confirmCreateGame(msg);
-        }
 
         if (cachedUserInput.winners?.includes(userInput) || cachedUserInput.losers?.includes(userInput)) {
             return this.sendMessage(msg, 'Spieler ist bereits eingetragen!', false);
@@ -592,11 +582,8 @@ export class BotService {
         const losers = (cachedUserInput?.losers || []).concat(userInput);
         this.addCachedUserInput(msg, CacheRoute.newgame, { losers });
 
-        const usedPlayers = cachedUserInput.winners?.concat(losers);
-        const availablePlayers = cup.attendees.map((player) => player.username)
-            .filter((player) => usedPlayers.includes(player) === false)
-
-        if (availablePlayers.length === 0) {
+        if (losers.length === cup.type) {
+            // TODO: Zusammenfassing des spiels ZUM SPEICHERN ANZEIGEN
             await this.updateBotState(msg, BotState.NEW_GAME_CONFIRM);
             return await this.confirmCreateGame(msg);
         }

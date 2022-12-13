@@ -1,5 +1,5 @@
 export enum CupType {
-    OneVsOne = 'OneVsOne',
-    TwoVsTwo = 'TwoVsTwo',
-    ThreeVsThree = 'ThreeVsThree',
+    OneVsOne = 2,
+    TwoVsTwo = 4,
+    ThreeVsThree = 6,
 }
