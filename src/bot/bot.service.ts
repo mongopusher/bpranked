@@ -212,7 +212,7 @@ export class BotService {
             case ChatErrorMessage.NO_JOINED_CUPS:
                 return this.sendMessage(msg, `Du nimmst an keinem Cup teil. Tritt einem Cup bei mit /joincup`);
             case ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP:
-                return this.cancelBot(msg, 'Du kannst nur Spiele in Cups mit mindestens 2 Teilnehmern erstellen!');
+                return this.cancelBot(msg, `Für ein Spiel in diesem Cup benötigst du mindestens ${error.data} Spieler!`);
             case ChatErrorMessage.CACHE_INVALID_FORMAT:
                 return this.cancelBot(msg, `Cache enthält ungültige Daten. Das dürfte nicht passieren. Bitte informiere den Administrator.`);
             case ChatErrorMessage.CACHE_EMPTY:
@@ -514,7 +514,7 @@ export class BotService {
         }
 
         if (cup.attendees.length < cup.mode * 2) {
-            throw new ChatError(ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP);
+            throw new ChatError(ChatErrorMessage.TOO_FEW_PLAYERS_IN_CUP, cup.mode * 2);
         }
 
         if (cup.attendees.some((attendee) => attendee.username === user.username) === false) {
