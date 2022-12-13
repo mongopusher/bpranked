@@ -34,7 +34,7 @@ export class CupEntity {
 
     @Column({
         type: 'enum',
-        enum: [CupType],
+        enum: CupType,
         default: CupType.TwoVsTwo
     })
     type: CupType;
