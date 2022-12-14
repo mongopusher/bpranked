@@ -73,7 +73,7 @@ export class BotService {
         return await this.handleText(msg, userInput);
     }
 
-    private async handleCommand(msg: Message, command: Command | string | undefined): Promise<Message> {
+    private async handleCommand(msg: Message, command: Command | string | undefined): Promise<any> {
         if (command === Command.START) {
             return this.startBot(msg);
         }
