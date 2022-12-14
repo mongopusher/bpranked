@@ -126,7 +126,7 @@ export class BotService {
         }
     }
 
-    private async handleText(msg: Message, userInput: string): Promise<Message> {
+    private async handleText(msg: Message, userInput: string): Promise<any> {
         const user = await this.userService.getByTelegramId(msg.from.id);
 
         if (!user) {
