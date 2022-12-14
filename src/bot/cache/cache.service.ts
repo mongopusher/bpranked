@@ -47,7 +47,7 @@ export class CacheService {
     }
 
     public addNewCup(userId: number, cache: Partial<TNewCupCache>): void {
-        if (this.newGame.has(userId) === false) {
+        if (this.newCup.has(userId) === false) {
             throw new ChatError(ChatErrorMessage.CACHE_EMPTY);
         }
         const oldCache = this.newCup.get(userId);
