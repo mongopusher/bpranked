@@ -6,4 +6,10 @@ export const CUP = {
     [CupMode.Three]: '3 vs 3',
 }
 
-export const CUPS = Object.values(CUP);
+export const CUPS_REVERSED = {
+    ['1 vs 1']: CupMode.One,
+    ['2 vs 2']: CupMode.Two,
+    ['3 vs 3']: CupMode.Three,
+}
+
+export const CUP_TEXTS = Object.values(CUP);

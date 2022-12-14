@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import TelegramBot, {Message, SendMessageOptions} from "node-telegram-bot-api";
+import TelegramBot, {KeyboardButton, Message, SendMessageOptions} from "node-telegram-bot-api";
 import {Command} from "@webserver/bot/commands/commands.constant";
 import {acceptTextBotStates, BotState} from "@webserver/bot/bot-state.constant";
 import {getCheers, getFarewell, getGreeting, getInitialGreeting, gib} from "@webserver/bot/utils/message.utils";
@@ -22,7 +22,7 @@ import {EloService} from "@webserver/elo/elo.service";
 import {CreateEloDto} from "@webserver/elo/dto/create-elo.dto";
 import {EMOJI} from "@webserver/bot/utils/emoji.constant";
 import {CupMode} from "@webserver/cup/cup-mode.enum";
-import {CUP, CUPS} from "@webserver/cup/cup.constant";
+import {CUP, CUP_TEXTS, CUPS_REVERSED} from "@webserver/cup/cup.constant";
 
 const DELETE_CONFIRM_STRING = 'lösch dich';
 
@@ -308,11 +308,11 @@ export class BotService {
     }
 
     private async chooseCupType(msg: Message, userInput: string): Promise<Message> {
-        if (CUPS.includes(userInput) === false) {
+        if (CUP_TEXTS.includes(userInput) === false) {
             return this.answer(msg, 'Ungültige Eingabe!', false);
         }
 
-        this.setCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup, { cupMode: CUP[userInput] });
+        this.setCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup, { cupMode: CUPS_REVERSED[userInput] });
 
         await this.updateBotState(msg.from.id, BotState.NEW_CUP_TYPE_SET);
 
