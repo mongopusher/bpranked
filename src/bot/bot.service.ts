@@ -94,7 +94,7 @@ export class BotService {
             case Command.STOP:
                 return this.stopBot(user, msg);
             case Command.PROXY:
-                //return this.executeProxyTask(user, msg);
+                return this.proxyConfirm(user, msg, command);
             case Command.METADATA:
                 return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
             case Command.NEW_CUP:
@@ -161,6 +161,8 @@ export class BotService {
                 return this.addLoser(msg, userInput, user);
             case BotState.NEW_GAME_LOSERS_SET:
                 return this.finishNewGame(msg, userInput, user);
+            case BotState.GAME_CONFIRMATION:
+                return this.receiveCreateGameConfirmation(userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
         }
@@ -207,6 +209,13 @@ export class BotService {
 
     private shouldAcceptTextFromUser(user: TUser): boolean {
         return acceptTextBotStates.includes(user.botState)
+    }
+
+    private async proxyConfirm(me: TUser, msg: Message, command: string): Promise<void> {
+        const commands = command.split(' ');
+
+        console.log({ commands });
+        await this.processSuccessfulCreateGameConfirmation(me, command[0]);
     }
 
     private async startBot(msg: Message): Promise<Message> {
@@ -647,7 +656,7 @@ export class BotService {
         await this.askForPlayerConfirmation(loser.chatId, broadCastText);
     }
 
-    public async receiveCreateGameConfirmation(msg: Message, userInput: string, user: TUser): Promise<Message> {
+    public async receiveCreateGameConfirmation(userInput: string, user: TUser): Promise<Message> {
         const confirmationCache = this.cacheService.getConfirmingGame(user.id);
         const creator = await this.userService.getByUsername(confirmationCache.creatorName);
 
@@ -662,7 +671,7 @@ export class BotService {
             await this.processSuccessfulCreateGameConfirmation(creator, user.username);
         }
 
-        return this.answer(msg, 'Ich habe dich nicht verstanden.', false);
+        return this.sendMessage(user.chatId, 'Ich habe dich nicht verstanden.', false);
     }
 
     private async processSuccessfulCreateGameConfirmation(creator: TUser, ownUsername: string): Promise<void> {
