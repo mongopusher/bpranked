@@ -158,7 +158,7 @@ export class BotService {
             case BotState.NEW_GAME_WINNERS_SET:
                 return this.addLoser(msg, userInput, user);
             case BotState.NEW_GAME_LOSERS_SET:
-                return this.broadcastCreateGameConfirmation(msg, userInput, user);
+                return this.finishNewGame(msg, userInput, user);
             default:
                 throw new Error('THIS SHOULD NEVER HAPPEN');
         }
@@ -581,10 +581,11 @@ export class BotService {
         return this.answerWithKeyboard(msg, textReply, ['Ja!', 'Nein.'], 2);
     }
 
-    public async broadcastCreateGameConfirmation(msg: Message, confirmResponse: string, user: TUser): Promise<Message> {
+    public async finishNewGame(msg: Message, confirmResponse: string, user: TUser): Promise<void> {
         if (ChatUtils.isFalsy(confirmResponse) === true) {
             this.cacheService.deleteNewGame(user.id);
-            return this.cancelBot(msg, 'Eintragen des Spiels abgebrochen.');
+            await this.cancelBot(msg, 'Eintragen des Spiels abgebrochen.');
+            return;
         }
 
         if (ChatUtils.isTruthy(confirmResponse) === true) {
@@ -593,17 +594,22 @@ export class BotService {
             const newGameCache = this.cacheService.getNewGame(user.id);
             const losers = await this.userService.getMultipleByName(newGameCache.losers);
 
-            // break here
+            // you are the only loser, no need to confirm
+            if(losers.length === 1 && losers[0].id === user.id) {
+                return this.processSuccessfulCreateGameConfirmation(user, user.username);
+            }
+
             for (const player of losers) {
                 await this.broadcastToLosers(player, user, msg);
             }
 
             await this.updateBotState(msg.from.id, BotState.ON);
-            return this.answer(msg, 'Spiel vorgemerkt. Einer der Verlierer muss das Spiel nun bestätigen.');
+            await this.answer(msg, 'Spiel vorgemerkt. Die Verlierer müssen das Spiel nun bestätigen.');
+            return;
         }
 
         const textReply = 'Ich habe dich nicht verstanden, bitte antworte laut mit <b>JA</b> oder <b>NEIN</b>';
-        return this.answer(msg, textReply, false);
+        await this.answer(msg, textReply, false);
     }
 
     private async broadcastToLosers(loser: TUser, creator: TUser, originalMessage: Message) {
