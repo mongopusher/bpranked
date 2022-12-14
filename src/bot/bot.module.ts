@@ -9,10 +9,11 @@ import {GameService} from "@webserver/game/game.service";
 import {GameEntity} from "@webserver/game/game.entity";
 import {EloEntity} from "@webserver/elo/elo.entity";
 import {EloService} from "@webserver/elo/elo.service";
+import {CacheService} from "@webserver/bot/cache/cache.service";
 
 @Module({
     imports: [TypeOrmModule.forFeature([UserEntity, CupEntity, GameEntity, EloEntity])],
-    providers: [BotService, UserService, CupService, GameService, EloService],
+    providers: [BotService, UserService, CupService, GameService, EloService, CacheService],
     exports: [BotService],
 })
 export class BotModule {}

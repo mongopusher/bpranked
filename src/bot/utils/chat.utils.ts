@@ -5,6 +5,7 @@ import {GameEntity} from "@webserver/game/game.entity";
 import {UserEntity} from "@webserver/user/user.entity";
 import {EMOJI} from "@webserver/bot/utils/emoji.constant";
 import {CUP} from "@webserver/cup/cup.constant";
+import {TUser} from "@webserver/user/types/user.type";
 
 
 export const DATE_FORMAT_DE = 'DD.MM.YYYY';
@@ -91,7 +92,7 @@ export class ChatUtils {
         return ['N', 'NEIN', 'NO'].includes(firstSymbol);
     }
 
-    public static getGameMessage(myTeam: Array<UserEntity>, theirTeam: Array<UserEntity>, self: UserEntity): string {
+    public static getGameMessage(myTeam: Array<UserEntity>, theirTeam: Array<UserEntity>, self: TUser): string {
         const mates = myTeam.filter((winner) => winner.id != self.id).map((user) => user.username);
         const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
         const againstEnemies = `gegen ${theirTeam.map((user) => user.username).join(', ')}`;
