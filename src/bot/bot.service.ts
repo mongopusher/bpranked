@@ -93,6 +93,8 @@ export class BotService {
         switch (command) {
             case Command.STOP:
                 return this.stopBot(user, msg);
+            case Command.PROXY:
+                //return this.executeProxyTask(user, msg);
             case Command.METADATA:
                 return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
             case Command.NEW_CUP:

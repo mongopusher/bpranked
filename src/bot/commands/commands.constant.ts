@@ -16,4 +16,5 @@ export enum Command {
     CHEERS = 'cheers',
     PROST = 'prost',
     GIB = 'gib',
+    PROXY = 'proxy',
 }
