@@ -90,11 +90,13 @@ export class BotService {
 
         console.log(`processing command [${command}] for user [${user.username}]`)
 
+        if (command.startsWith(Command.PROXY)) {
+            return this.proxyConfirm(user, msg, command);
+        }
+
         switch (command) {
             case Command.STOP:
                 return this.stopBot(user, msg);
-            case Command.PROXY:
-                return this.proxyConfirm(user, msg, command);
             case Command.METADATA:
                 return this.bot.sendMessage(msg.chat.id, JSON.stringify(msg));
             case Command.NEW_CUP:
@@ -606,7 +608,7 @@ export class BotService {
             const losers = await this.userService.getMultipleByName(newGameCache.losers);
 
             // you are the only loser, no need to confirm
-            if(losers.length === 1 && losers[0].id === user.id) {
+            if (losers.length === 1 && losers[0].id === user.id) {
                 return this.processSuccessfulCreateGameConfirmation(user, user.username);
             }
 
