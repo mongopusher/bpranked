@@ -43,7 +43,7 @@ type TNewGameCache = {
 }
 
 type TNewCupCache = {
-    cupType: CupMode;
+    cupMode: CupMode;
     cupName?: string;
 }
 
@@ -312,7 +312,7 @@ export class BotService {
             return this.answer(msg, 'Ungültige Eingabe!', false);
         }
 
-        this.setCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup, { cupType: CUP[userInput] });
+        this.setCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup, { cupMode: CUP[userInput] });
 
         await this.updateBotState(msg.from.id, BotState.NEW_CUP_TYPE_SET);
 
@@ -358,9 +358,11 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.INVALID_DATE);
         }
 
-        const { cupName, cupType } = this.getCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup);
+        const { cupName, cupMode } = this.getCachedUserInput<TNewCupCache>(msg.from.id, CacheRoute.newcup);
+        console.log({ cupMode });
 
-        const cup = await this.cupService.create(user, new CreateCupDto(cupName, cupType, endDate.toDate()));
+
+        const cup = await this.cupService.create(user, new CreateCupDto(cupName, cupMode, endDate.toDate()));
         await this.updateBotState(msg.from.id, BotState.ON);
         return await this.answer(msg, `Cup <i>${cup.name}</i> erstellt!`);
     }

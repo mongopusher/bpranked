@@ -2,9 +2,9 @@ import {IsNotEmpty, IsOptional} from 'class-validator';
 import {CupMode} from "@webserver/cup/cup-mode.enum";
 
 export class CreateCupDto {
-    public constructor(name: string, type: CupMode, endTimestamp: Date, startTimestamp?: Date | undefined) {
+    public constructor(name: string, mode: CupMode, endTimestamp: Date, startTimestamp?: Date | undefined) {
         this.name = name;
-        this.type = type;
+        this.mode = mode;
         this.endTimestamp = endTimestamp;
         this.startTimestamp = startTimestamp;
     }
@@ -13,7 +13,7 @@ export class CreateCupDto {
     readonly name: string;
 
     @IsNotEmpty()
-    readonly type: CupMode;
+    readonly mode: CupMode;
 
     @IsNotEmpty()
     readonly endTimestamp: Date;
