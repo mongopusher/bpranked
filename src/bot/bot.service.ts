@@ -806,6 +806,7 @@ export class BotService {
                 remove_keyboard: shouldRemoveKeyboard,
             },
             parse_mode: 'HTML',
+            disable_web_page_preview: true
         };
 
         return this.bot.sendMessage(chatId, text, options);
@@ -819,6 +820,7 @@ export class BotService {
         const options: SendMessageOptions = {
             reply_markup: ChatUtils.getKeyboardMarkup(keyBoardData, columns),
             parse_mode: 'HTML',
+            disable_web_page_preview: true
         };
 
         return this.bot.sendMessage(chatId, text, options)
