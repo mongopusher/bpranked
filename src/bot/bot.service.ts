@@ -721,6 +721,7 @@ export class BotService {
         }
 
         acceptingLosers.push(user.username);
+        console.log({ acceptingLosers, newGameCache, creator })
 
         if (acceptingLosers.length < newGameCache.losers.length) {
             this.cacheService.addNewGame(creator.id, { acceptingLosers: [...acceptingLosers] })
@@ -744,6 +745,7 @@ export class BotService {
             await this.eloService.updateElos(cup, winners, losers);
 
             const subscribers = [...winners, ...losers].filter(({ username }) => username !== creator.username);
+            console.log(subscribers);
 
             for (const subscriber of subscribers) {
                 await this.sendMessage(subscriber.chatId, formattedGame);
