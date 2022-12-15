@@ -65,7 +65,7 @@ export class BotService {
                     error
                 ]
 
-                return this.bot.sendMessage(msg.chat.id, response.join('\n'));
+                return this.cancelBot(msg, response.join('\n'));
 
             }
         });
