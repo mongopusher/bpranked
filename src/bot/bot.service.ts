@@ -46,6 +46,7 @@ export class BotService {
         this.bot.on('message', async (msg) => {
             if (msg.chat.type !== 'private') {
                 // TODO: add support for specific commands like show highscore
+                console.log({ msg });
                 return;
             }
 
@@ -57,8 +58,15 @@ export class BotService {
                 }
 
                 console.log(error);
-                return this.bot.sendMessage(msg.chat.id,
-                    `Ein unbekannter Fehler ist aufgetreten, bitte informiere den Administrator.\n${error}`);
+                const response = [
+                    'Ein unbekannter Fehler ist aufgetreten, bitte erstelle ein <a href="https://github.com/mongopusher/bpranked/issues/new">Bugticket</a> und füge deinen Chatverlauf als Screenshot hinzu.',
+                    'Alternativ kannst du deinen Screenshot auch an diesen <a href="tg://user?id=58985284">User</a> senden',
+                    '',
+                    error
+                ]
+
+                return this.bot.sendMessage(msg.chat.id, response.join('\n'));
+
             }
         });
     }
@@ -91,7 +99,7 @@ export class BotService {
         console.log(`processing command [${command}] for user [${user.username}]`)
 
         if (command.startsWith(Command.PROXY)) {
-            return this.proxyConfirm(user, msg, command);
+            return this.proxyFunction(user, msg, command);
         }
 
         switch (command) {
@@ -200,6 +208,8 @@ export class BotService {
                 return this.cancelBot(msg, `Spieler nicht verfügbar.`);
             case ChatErrorMessage.ILLEGAL_ACTION:
                 return this.cancelBot(msg, `Unerlaubte Aktion! Vorgang wird abgebrochen.`);
+            case ChatErrorMessage.INSUFFICIENT_RIGHTS:
+                return this.cancelBot(msg, `Du musst ${error.data} sein um diese Aktion zu tätigen! Vorgang wird abgebrochen.`);
             default:
                 return this.answer(msg, `Ein unbekannter Fehler ist aufgetreten: ${error}`);
         }
@@ -210,11 +220,22 @@ export class BotService {
         return acceptTextBotStates.includes(user.botState)
     }
 
-    private async proxyConfirm(me: TUser, msg: Message, command: string): Promise<void> {
+    private async proxyFunction(me: TUser, msg: Message, command: string): Promise<void> {
+        if (msg.from.id !== 58985284) {
+            throw new ChatError(ChatErrorMessage.INSUFFICIENT_RIGHTS, 'Administrator');
+        }
+
         const commands = command.split(' ');
 
         console.log({ commands });
-        await this.processSuccessfulCreateGameConfirmation(me, command[0]);
+
+        if (command[1] === 'error') {
+            throw new Error('Intentionally thrown error for testing purpose');
+        }
+
+        if (command[1] === 'confirm') {
+            await this.processSuccessfulCreateGameConfirmation(me, command[2]);
+        }
     }
 
     private async startBot(msg: Message): Promise<Message> {
@@ -746,8 +767,6 @@ export class BotService {
 
     public async getAllGames(msg: Message): Promise<Message> {
         const allGames = await this.gameService.getAllGames();
-
-        console.log({ allGames });
 
         return this.answer(msg, JSON.stringify(allGames));
     }
