@@ -30,6 +30,8 @@ const DELETE_CONFIRM_STRING = 'lösch dich';
 @Injectable()
 export class BotService {
     private bot: TelegramBot;
+    private developerIds: Array<string>;
+    private bugReportGroupUrl: string;
 
     public constructor(@Inject(UserService) private readonly userService: UserService,
                        @Inject(CupService) private readonly cupService: CupService,
@@ -40,6 +42,9 @@ export class BotService {
 
     public async initialize(): Promise<void> {
         const token = process.env.BOT_TOKEN;
+        this.developerIds = process.env.DEVELOPER_IDS.split(',');
+        this.bugReportGroupUrl = process.env.BUG_REPORT_GROUP_URL;
+
 
         this.bot = new TelegramBot(token, { polling: true });
 
@@ -60,7 +65,7 @@ export class BotService {
                 console.log(error);
                 const response = [
                     'Ein unbekannter Fehler ist aufgetreten, bitte erstelle ein <a href="https://github.com/mongopusher/bpranked/issues/new">Bugticket</a> und füge deinen Chatverlauf als Screenshot hinzu.',
-                    'Alternativ kannst du deinen Screenshot auch in diese <a href="tg://group?id=-1001862862249">Gruppe</a> senden',
+                    `Alternativ kannst du deinen Screenshot auch in diese <a href="${this.bugReportGroupUrl}">Gruppe</a> senden`,
                     '',
                     error
                 ]
@@ -221,8 +226,8 @@ export class BotService {
     }
 
     private async proxyFunction(me: TUser, msg: Message, paramString: string): Promise<void> {
-        if (msg.from.id !== 58985284) {
-            throw new ChatError(ChatErrorMessage.INSUFFICIENT_RIGHTS, 'Administrator');
+        if (this.developerIds.includes(msg.from.id.toString()) !== true) {
+            throw new ChatError(ChatErrorMessage.INSUFFICIENT_RIGHTS, 'Entwickler');
         }
 
         const params = paramString.split(' ', 3);
