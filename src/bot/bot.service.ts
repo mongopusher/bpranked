@@ -694,7 +694,6 @@ export class BotService {
             this.cacheService.deleteNewGame(creator.id);
             await this.updateBotState(creator.telegramId, BotState.ON);
             // TODO: hier ebenfalls broadcasten an alle
-            this.cacheService.get
             await this.sendMessage(creator.chatId, `${ChatUtils.getUserLink(user)} hat das Spiel abgelehnt. Vorgang abgebrochen!`);
             return;
         }
@@ -709,8 +708,9 @@ export class BotService {
 
     private async processSuccessfulCreateGameConfirmation(creator: TUser, user: TUser): Promise<void> {
         const newGameCache = this.cacheService.getNewGame(creator.id);
+        const acceptingLosers = newGameCache.acceptingLosers ?? [];
 
-        if (newGameCache.acceptingLosers.includes(user.username) === true) {
+        if (acceptingLosers.includes(user.username) === true) {
             await this.sendMessage(user.chatId, 'Du hast dieses Spiel bereits bestätigt.');
             return;
         }
@@ -720,7 +720,6 @@ export class BotService {
             return;
         }
 
-        const acceptingLosers = newGameCache.acceptingLosers ?? [];
         acceptingLosers.push(user.username);
 
         if (acceptingLosers.length < newGameCache.losers.length) {
