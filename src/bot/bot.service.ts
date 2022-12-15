@@ -229,12 +229,12 @@ export class BotService {
 
         console.log({ commands });
 
-        if (command[1] === 'error') {
+        if (commands[1] === 'error') {
             throw new Error('Intentionally thrown error for testing purpose');
         }
 
-        if (command[1] === 'confirm') {
-            await this.processSuccessfulCreateGameConfirmation(me, command[2]);
+        if (commands[1] === 'confirm') {
+            await this.processSuccessfulCreateGameConfirmation(me, commands[2]);
         }
     }
 
