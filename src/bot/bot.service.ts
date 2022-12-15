@@ -220,21 +220,25 @@ export class BotService {
         return acceptTextBotStates.includes(user.botState)
     }
 
-    private async proxyFunction(me: TUser, msg: Message, command: string): Promise<void> {
+    private async proxyFunction(me: TUser, msg: Message, paramString: string): Promise<void> {
         if (msg.from.id !== 58985284) {
             throw new ChatError(ChatErrorMessage.INSUFFICIENT_RIGHTS, 'Administrator');
         }
 
-        const commands = command.split(' ');
+        const params = paramString.split(' ', 2);
 
-        console.log({ commands });
+        console.log({ commands: params });
 
-        if (commands[1] === 'error') {
+        if (params[1] === 'error') {
             throw new Error('Intentionally thrown error for testing purpose');
         }
 
-        if (commands[1] === 'confirm') {
-            await this.processSuccessfulCreateGameConfirmation(me, commands[2]);
+        if (params[1] === 'link') {
+            await this.sendMessage(msg.chat.id, `<a href="${params[2]}">Test Link</a>`)
+        }
+
+        if (params[1] === 'confirm') {
+            await this.processSuccessfulCreateGameConfirmation(me, params[2]);
         }
     }
 
