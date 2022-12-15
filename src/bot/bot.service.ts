@@ -225,7 +225,7 @@ export class BotService {
             throw new ChatError(ChatErrorMessage.INSUFFICIENT_RIGHTS, 'Administrator');
         }
 
-        const params = paramString.split(' ', 2);
+        const params = paramString.split(' ', 3);
 
         console.log({ commands: params });
 
