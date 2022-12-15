@@ -60,7 +60,7 @@ export class BotService {
                 console.log(error);
                 const response = [
                     'Ein unbekannter Fehler ist aufgetreten, bitte erstelle ein <a href="https://github.com/mongopusher/bpranked/issues/new">Bugticket</a> und füge deinen Chatverlauf als Screenshot hinzu.',
-                    'Alternativ kannst du deinen Screenshot auch an diesen <a href="tg://user?id=58985284">User</a> senden',
+                    'Alternativ kannst du deinen Screenshot auch in diese <a href="tg://group?id=-1001862862249">Gruppe</a> senden',
                     '',
                     error
                 ]
