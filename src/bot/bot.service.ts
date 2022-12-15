@@ -171,9 +171,6 @@ export class BotService {
     }
 
     private async handleChatError(msg: Message, error: ChatError): Promise<Message> {
-        if (!(error instanceof ChatError)) {
-            return
-        }
         console.log(error);
 
         switch (error.message) {
@@ -667,10 +664,12 @@ export class BotService {
             await this.updateBotState(creator.telegramId, BotState.ON);
             // TODO: hier ebenfalls broadcasten an alle
             await this.sendMessage(creator.chatId, `${user.username} hat das Spiel abgelehnt. Vorgang abgebrochen!`);
+            return;
         }
 
         if (ChatUtils.isTruthy(userInput) === true) {
             await this.processSuccessfulCreateGameConfirmation(creator, user.username);
+            return;
         }
 
         return this.sendMessage(user.chatId, 'Ich habe dich nicht verstanden.', false);
