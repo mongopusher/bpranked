@@ -242,9 +242,9 @@ export class BotService {
             await this.sendMessage(msg.chat.id, `<a href="${params[2]}">Test Link</a>`)
         }
 
-        if (params[1] === 'confirm') {
-            await this.processSuccessfulCreateGameConfirmation(me, params[2]);
-        }
+        // if (params[1] === 'confirm') {
+        //     await this.processSuccessfulCreateGameConfirmation(me, params[2]);
+        // }
     }
 
     private async startBot(msg: Message): Promise<Message> {
@@ -636,7 +636,7 @@ export class BotService {
 
             // you are the only loser, no need to confirm
             if (losers.length === 1 && losers[0].id === user.id) {
-                return this.processSuccessfulCreateGameConfirmation(user, user.username);
+                return this.processSuccessfulCreateGameConfirmation(user, user);
             }
 
             for (const player of losers) {
@@ -654,19 +654,19 @@ export class BotService {
 
     private async broadcastToLosers(loser: TUser, creator: TUser, originalMessage: Message) {
         if (loser.id === creator.id) {
-            await this.processSuccessfulCreateGameConfirmation(creator, loser.username);
+            await this.processSuccessfulCreateGameConfirmation(creator, loser);
             return;
         }
 
         if (loser.botState === BotState.OFF) {
             await this.answer(originalMessage, `${loser.username} ist offline und wird nicht um Bestätigung gefragt`);
-            await this.processSuccessfulCreateGameConfirmation(creator, loser.username);
+            await this.processSuccessfulCreateGameConfirmation(creator, loser);
             return;
         }
 
         let broadCastText = '';
         if (loser.botState !== BotState.ON) {
-            broadCastText = 'Tut mir leid, dass ich dich unterbrechen muss.\n';
+            broadCastText = 'Aktueller Vorgang wurde abgebrochen.\n';
         }
 
         const newGameCache = this.cacheService.getNewGame(creator.id);
@@ -680,7 +680,8 @@ export class BotService {
             cupName: newGameCache.cupName,
         });
 
-        broadCastText += 'Du hast eben ein Spiel gegen verloren, oder?' + ChatUtils.getGameMessage(losers, winners, loser);
+        broadCastText += `${ChatUtils.getUserLink(creator)} hat mir gezwitschert, dass du `;
+        broadCastText += `${ChatUtils.getGameMessage(losers, winners, loser)} verloren hast ${EMOJI.LOUDLY_CRYING_FACE} Stimmt das?`;
 
         await this.askForPlayerConfirmation(loser.chatId, broadCastText);
     }
@@ -693,64 +694,66 @@ export class BotService {
             this.cacheService.deleteNewGame(creator.id);
             await this.updateBotState(creator.telegramId, BotState.ON);
             // TODO: hier ebenfalls broadcasten an alle
-            await this.sendMessage(creator.chatId, `${user.username} hat das Spiel abgelehnt. Vorgang abgebrochen!`);
+            this.cacheService.get
+            await this.sendMessage(creator.chatId, `${ChatUtils.getUserLink(user)} hat das Spiel abgelehnt. Vorgang abgebrochen!`);
             return;
         }
 
         if (ChatUtils.isTruthy(userInput) === true) {
-            await this.processSuccessfulCreateGameConfirmation(creator, user.username);
+            await this.processSuccessfulCreateGameConfirmation(creator, user);
             return;
         }
 
         return this.sendMessage(user.chatId, 'Ich habe dich nicht verstanden.', false);
     }
 
-    private async processSuccessfulCreateGameConfirmation(creator: TUser, ownUsername: string): Promise<void> {
+    private async processSuccessfulCreateGameConfirmation(creator: TUser, user: TUser): Promise<void> {
         const newGameCache = this.cacheService.getNewGame(creator.id);
 
-        const acceptingLosers = newGameCache.acceptingLosers ?? [];
-        acceptingLosers.push(ownUsername);
+        if (newGameCache.acceptingLosers.includes(user.username) === true) {
+            await this.sendMessage(user.chatId, 'Du hast dieses Spiel bereits bestätigt.');
+            return;
+        }
 
-        if (acceptingLosers.length !== newGameCache.losers.length) {
+        if (newGameCache.losers.includes(user.username) !== true) {
+            await this.sendMessage(user.chatId, 'Du nimmst an diesem Spiel nicht teil!');
+            return;
+        }
+
+        const acceptingLosers = newGameCache.acceptingLosers ?? [];
+        acceptingLosers.push(user.username);
+
+        if (acceptingLosers.length < newGameCache.losers.length) {
             this.cacheService.addNewGame(creator.id, { acceptingLosers: [...acceptingLosers] })
             return;
         }
 
-        // TODO: test 4 real for equal
         if (acceptingLosers.length === newGameCache.losers.length) {
+            const mergedLosers = new Set([...acceptingLosers, ...newGameCache.losers]);
+
+            if (mergedLosers.size !== newGameCache.losers.length) {
+                throw new ChatError(ChatErrorMessage.ILLEGAL_ACTION)
+            }
+
             const cup = await this.cupService.getByName(newGameCache.cupName);
             const winners = await this.userService.getMultipleByName(newGameCache.winners);
             const losers = await this.userService.getMultipleByName(newGameCache.losers);
 
             const createGameDto = new CreateGameDto(cup, winners, losers);
-            await this.gameService.createGame(createGameDto);
-
+            const game = await this.gameService.createGame(createGameDto);
+            const formattedGame = ChatUtils.getGameSummary(game);
             await this.eloService.updateElos(cup, winners, losers);
 
-            let isCreatorIncluded = false;
-            for (const winner of winners) {
-                await this.sendMessage(winner.chatId, 'Sieg eingetragen!');
-                await this.updateBotState(winner.telegramId, BotState.ON);
-                this.cacheService.deleteAll(winner.id);
-                if (winner.id === creator.id) {
-                    isCreatorIncluded = true;
-                }
+            const subscribers = [...winners, ...losers].filter(({ username }) => username !== creator.username);
+
+            for (const subscriber of subscribers) {
+                await this.sendMessage(subscriber.chatId, formattedGame);
+                await this.updateBotState(subscriber.telegramId, BotState.ON);
+                this.cacheService.deleteAll(subscriber.id);
             }
 
-            for (const loser of losers) {
-                await this.sendMessage(loser.chatId, 'Niederlage eingetragen!');
-                await this.updateBotState(loser.telegramId, BotState.ON);
-                this.cacheService.deleteAll(loser.id);
-                if (loser.id === creator.id) {
-                    isCreatorIncluded = true;
-                }
-            }
-
-            if (isCreatorIncluded === false) {
-                await this.updateBotState(creator.telegramId, BotState.ON);
-                this.cacheService.deleteAll(creator.id);
-                await this.sendMessage(creator.chatId, 'Spiel eingetragen!');
-            }
+            console.log(`New game created in ${cup.name}`);
+            console.log(`${subscribers.length} subscribers have been notified`);
         }
     }
 
@@ -793,7 +796,7 @@ export class BotService {
     }
 
     private askForPlayerConfirmation(chatId: number, text: string): Promise<Message> {
-        return this.sendMessageWithKeyboard(chatId, text, [`Ja.`], 2)
+        return this.sendMessageWithKeyboard(chatId, text, ['Ja.', 'Nein.'], 2)
     }
 
     private answer(msg: Message, text: string, shouldRemoveKeyboard = true): Promise<Message> {

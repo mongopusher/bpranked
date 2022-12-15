@@ -82,6 +82,13 @@ export class ChatUtils {
         return [gameHeader, gameBody, ''].join('\n');
     }
 
+    public static getGameSummary(game: GameEntity): string {
+        const summary = [`Spiel in ${game.cup.name} eingetragen:`];
+        summary.push(`${EMOJI.GLOWING_STAR} Sieger: ${game.winners.map(ChatUtils.getUserLink)}`);
+        summary.push(`${EMOJI.PILE_OF_POO} Verlierer: ${game.losers.map(ChatUtils.getUserLink)}`);
+        return summary.join('\n');
+    }
+
     public static isTruthy(text: string): boolean {
         const firstSymbol = text.substring(0,4).toUpperCase();
         return ['Y', 'J', 'YES', 'JA', 'JA!', 'JA.'].includes(firstSymbol);
@@ -95,7 +102,11 @@ export class ChatUtils {
     public static getGameMessage(myTeam: Array<UserEntity>, theirTeam: Array<UserEntity>, self: TUser): string {
         const mates = myTeam.filter((winner) => winner.id != self.id).map((user) => user.username);
         const withMates = mates.length !== 0 ? `mit ${mates.join(', ')} ` : '';
-        const againstEnemies = `gegen ${theirTeam.map((user) => user.username).join(', ')}`;
+        const againstEnemies = `gegen ${theirTeam.map(ChatUtils.getUserLink).join(', ')}`;
         return `${withMates}${againstEnemies}`;
+    }
+
+    public static getUserLink(user: TUser): string {
+        return `<a href="${user.telegramId}">${user.username}</a>`;
     }
 }
