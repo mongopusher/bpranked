@@ -63,7 +63,7 @@ export class EloService {
     }
 
     private getNewElo(ownElo: number, enemyElo: number, isWinner: boolean): number {
-        const scaling = (ownElo - enemyElo) * ELO.SCALE_FACTOR;
+        const scaling = Math.round((ownElo - enemyElo) * ELO.SCALE_FACTOR);
         return isWinner === true ? scaling + ELO.BASE_GAIN : scaling - ELO.BASE_GAIN;
     }
 
