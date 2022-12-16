@@ -89,6 +89,7 @@ export class EloService {
 
     public async getEloByUserAndCup(user: UserEntity, cup: CupEntity): Promise<EloEntity> {
         return this.eloRepository.createQueryBuilder('elo')
+            .leftJoinAndSelect('elo.user', 'user')
             .where('elo.userId = :userId', { userId: user.id })
             .andWhere('elo.cupId = :cupId', { cupId: cup.id })
             .getOne();
