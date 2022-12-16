@@ -744,8 +744,8 @@ export class BotService {
             const formattedGame = ChatUtils.getGameSummary(game);
             await this.eloService.updateElos(cup, winners, losers);
 
-            const subscribers = [...winners, ...losers].filter(({ username }) => username !== creator.username);
-            console.log(subscribers);
+            // do not send double to creator
+            const subscribers = [...new Map([...winners, ...losers, creator].map((user) => [user.username, user])).values()];
 
             for (const subscriber of subscribers) {
                 await this.sendMessage(subscriber.chatId, formattedGame);
@@ -753,7 +753,7 @@ export class BotService {
                 this.cacheService.deleteAll(subscriber.id);
             }
 
-            console.log(`New game created in ${cup.name}`);
+            console.log(`Created new game in ${cup.name}`);
             console.log(`${subscribers.length} subscribers have been notified`);
         }
     }
